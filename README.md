@@ -33,18 +33,76 @@ both synthetic and real-world datasets supported by multiple evaluation methods
 and compared with state-of-the-art post-hoc techniques. It successfully identified
 the most relevant features for different labels.
 
-## How to execute
-### Define the feature weighting algorithms
-On `run_evaluation.py`, add on "selectors_types" list all methods that you want to compare.
-All available methods are already imported.
-Example: `selectors_types = [MFSLayerV1ReLUSelector, LassoSelectorWrapper, LIMESelectorWrapper, DeepSHAPSelectorWrapper]`
-### Setup the general execution config
-On `config/general_config.py` is possible to set all framework options including the folder of the dataset that will be used for the evaluation.
-### Setup predictors
-On `config/predictor_types_config.py` is possible to set the predictors that will be used to evaluate feature selection subsets. 
-Current options are: SVC and Neural Network.
-### Setup stability metrics
-On `config/stability_metrics_config.py` you can define the stability metrics that will be used during the evaluation.
-Current options are: Jaccard, Spearman, Pearson and Kuncheva.
-### Execute the analysis
-With all dependencies (`requirements.txt`) prepared, execute: `python main.py`
+## Getting Started
+
+You can execute this project using Docker for maximum reproducibility or locally if you need more control over your environment (e.g., specific CUDA versions).
+
+### Execute from Docker (Recommended)
+
+This method ensures all dependencies, including the required CUDA 13 environment, are set up correctly.
+
+0.  For GPU usage the NVIDIA Container Toolkit it necessary
+    sudo apt-get install -y nvidia-container-toolkit
+    sudo nvidia-ctk runtime configure --runtime=docker
+    > Restart Docker
+1.  Build the Docker image:
+    docker build -t label-specific-fsl .
+2.  Run the image:
+    docker run --gpus all label-specific-fsl
+    > Note: The Dockerfile is pre-configured to use CUDA 13. If you require a different version, local execution is recommended.
+
+---
+
+### Local Execution
+
+This method requires a pre-existing Python environment and uv for dependency management.
+
+#### Requirements & Setup
+
+1.  Install uv (a fast Python package installer and virtual environment creator):
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+2.  Create and activate the virtual environment:
+    uv venv
+    source .venv/bin/activate
+3.  Install Dependencies:
+    * Install core dependencies:
+        uv pip install -r requirements.txt
+    * Install PyTorch and CUDA 13 specific dependencies:
+        uv pip install -r requirements-torch.txt --extra-index-url https://download.pytorch.org/whl/cu130
+    > CUDA Version Note: This setup is optimized for CUDA 13. If you need CUDA 12 or another version, skip the requirements-torch.txt step and install the appropriate PyTorch version manually from the official PyTorch website.
+
+---
+
+## How to Execute Locally
+
+Once the environment is set up, you need to configure the evaluation parameters before running the main script. All configuration files are located under the config/ directory.
+
+### 1. Configure the Feature Weighting Algorithms
+
+In the file run_evaluation.py, define the list of feature weighting algorithms (selectors) you want to compare in the selectors_types list.
+
+* Example:
+    selectors_types = [MFSLayerV1ReLUSelector, LassoSelectorWrapper, LIMESelectorWrapper, DeepSHAPSelectorWrapper]
+    > All available methods are already imported in the script.
+
+### 2. Setup General Execution Options
+
+Review and adjust framework options and dataset paths in config/general_config.py. This controls the overall execution flow.
+
+### 3. Setup Predictors
+
+In config/predictor_types_config.py, specify the machine learning models (predictors) that will be used to evaluate the performance of the feature subsets selected by the algorithms.
+
+* Current Options: SVC and Neural Network.
+
+### 4. Setup Stability Metrics
+
+Define the metrics for assessing the consistency of the feature selection process in config/stability_metrics_config.py.
+
+* Current Options: Jaccard, Spearman, Pearson, and Kuncheva.
+
+### 5. Execute the Analysis
+
+With all configurations and dependencies prepared, run the main script:
+
+python main.py
