@@ -25,16 +25,26 @@ class DatasetConfig:
     test_percentage: int
     k_fold: int
     k_fold_repeat: int
+    regularization_lambda: float
+    lime_k: int
+    shap_k: int
+    shap_representative_k: int
+    relieff_k: int
+    lasso_regularization: float
 
 class FeatureConfig:
     informative_prefix: str
     informative_per_label_prefix: str
+    
+class SelectorConfig:
+    model: str
 
 class Config:
     output: OutputConfig
     dataset: DatasetConfig
     feature: FeatureConfig
     random_seed: int
+    selectors: list[SelectorConfig]
 
     
         

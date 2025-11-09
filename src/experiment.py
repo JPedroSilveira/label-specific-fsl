@@ -1,9 +1,11 @@
+import selectors
 import uuid
 import hydra
 import matplotlib as plt
 from skimage import data
 
 from config.type import Config
+from src.domain.selector.SelectorTypeCreator import SelectorTypeCreator
 from src.domain.data.DatasetsCreator import DatasetsCreator
 from src.domain.data.KFoldCreator import KFoldCreator
 from src.domain.data.DatasetLoader import DatasetLoader
@@ -11,7 +13,6 @@ from src.domain.folder.OutputFolderCreator import OutputFolderCreator
 
 # Non refactored imports
 
-import src.config.general_config as general_config
 from typing import List
 from src.evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
 from src.util.selection_persistence import persist_rank, persist_weights, persist_execution_metrics
@@ -29,26 +30,6 @@ from src.evaluation.prediction.PredictionAverage import SelectorPredictionScoreS
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 from src.evaluation.occlusion.Occlusion import calculate_and_persist_occlusion, persist_merged_occlusion
 from src.selector.enum.PredictionMode import PredictionMode
-
-
-# Feature Selectors
-from src.selector.LassoSelector import LassoSelectorWrapper #Rápido
-from src.selector.DecisionTreeSelector import DecisionTreeSelectorWrapper #Rápido
-from src.selector.RandomForestSelector import RandomForestSelectorWrapper #Rápido
-from src.selector.SHAPSelector import SHAPSelectorWrapper #Médio
-from src.selector.LIMESelector import LIMESelectorWrapper #Lento+
-from src.selector.DeepSHAPSelector import DeepSHAPSelectorWrapper #Médio
-from src.selector.KruskalWallisSelector import KruskalWallisSelectorWrapper
-from src.selector.ReliefFSelector import ReliefFSelectorWrapper
-from src.selector.FeatureSelectionLayerSelector import FeatureSelectionLayerSelectorWrapper
-from src.selector.fs_based.FeatureSelectionObserverSelector import FeatureSelectionObserverSelectorWrapper
-from src.selector.fs_based._export import RFSLayerSelectorV1Wrapper
-from src.selector.fs_based._export import MFSLayerV1ReLUSelector
-from src.selector.fs_based._export import MFSLayerV1SigmoidSelector
-from src.selector.fs_based._export import MFSLayerV1TanhSelector
-from src.selector.fs_based._export import FSRLayerV1ReLUSelector
-from src.selector.fs_based._export import FSRLayerV1SigmoidSelector
-from src.selector.fs_based._export import FSRLayerV1TanhSelector
 
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
@@ -80,6 +61,12 @@ def execute_experiment(config: Config) -> None:
     # Define KFold datasets
     k_datasets = KFoldCreator.execute(splitted_dataset.get_train(), config)
     print(f'K-Fold datasets created: {len(k_datasets)}')
+    
+    # Define selectors
+    selectors_types = SelectorTypeCreator.execute(config)
+    print("Defined selectors:")
+    for selectors_type in selectors_types:
+        print(f'- {selectors_type.get_name()}')
     
     return
 

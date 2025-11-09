@@ -1,0 +1,42 @@
+random_seed: 42
+feature:
+  informative_prefix: informative_
+  informative_per_label_prefix: informative_per_label_
+output:
+  root: output
+  temporary: temporary
+  execution_output:
+    root: '[to be set dynamically]'
+    selection_performance: selection_performance
+    feature_erasure: feature_erasure
+    predictive_performance: predictive_performance
+    weighted_tsne: weighted_tsne
+    stability: stability
+    execution_time: execution_time
+    informative_features: informative_features
+    raw_selection: raw_selection
+dataset:
+  root: dataset
+  filename: xor_500samples_50features.csv
+  label_column: class
+  ignored_columns:
+  - id
+  test_percentage: 30
+  k_fold: 11
+  k_fold_repeat: 1
+  regularization_lambda: 0.005
+  lime_k: 1000
+  shap_k: 1000
+  shap_representative_k: 1000
+  relieff_k: 1000
+  lasso_regularization: 0.01
+selector:
+  items:
+  - model: DecisionTree
+  - model: RandomForest
+  - model: KruskalWallis
+  - model: ReliefF
+  - model: Lasso
+  - model: LIME
+  - model: DeepSHAP
+  - model: MultipleFSL

@@ -1,6 +1,7 @@
 defaults:
     - _self_
     - dataset: xor
+    - selectors: default
 random_seed: 42
 feature:
     informative_prefix: "informative_"
