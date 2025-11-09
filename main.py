@@ -1,6 +1,12 @@
-from run_evaluation import run_evaluation
+import hydra
+from config.config import Config
+from experiment import execute_experiment
 from util.test_gpu import test_gpu
 
-if __name__ == '__main__':
+@hydra.main(version_base=None, config_path="config", config_name="config")
+def main(config: Config) -> None:
     test_gpu()
-    run_evaluation()
+    execute_experiment(config)
+
+if __name__ == '__main__':
+    main()

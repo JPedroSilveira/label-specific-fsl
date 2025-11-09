@@ -1,9 +1,12 @@
+import uuid
+import hydra
 import matplotlib as plt
+from config.config import Config
 import config.general_config as general_config
 from typing import List
 from evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
-from output.OutputFolder import create_output_files
-from output.SelectionPersistence import persist_rank, persist_weights, persist_execution_metrics
+from util.output_folder import create_output_files
+from util.selection_persistence import persist_rank, persist_weights, persist_execution_metrics
 from util.performance_util import ExecutionTimeCounter
 from util.print_util import print_with_time
 from util.dict_util import add_on_dict_list
@@ -26,7 +29,6 @@ from selector.enum.PredictionMode import PredictionMode
 from selector.LassoSelector import LassoSelectorWrapper #Rápido
 from selector.DecisionTreeSelector import DecisionTreeSelectorWrapper #Rápido
 from selector.RandomForestSelector import RandomForestSelectorWrapper #Rápido
-from selector.MRMRSelector import MRMRFeatureSelectorWrapper #Lento+
 from selector.SHAPSelector import SHAPSelectorWrapper #Médio
 from selector.LIMESelector import LIMESelectorWrapper #Lento+
 from selector.DeepSHAPSelector import DeepSHAPSelectorWrapper #Médio
@@ -43,9 +45,16 @@ from selector.fs_based._export import FSRLayerV1SigmoidSelector
 from selector.fs_based._export import FSRLayerV1TanhSelector
 
 
-def run_evaluation():
+@hydra.main(version_base=None, config_path="config", config_name="config")
+def execute_experiment(config: Config):
+    # Create execution id
+    execution_id = str(uuid.uuid4())
+    print(f'Execution ID: {execution_id}')
+
     # Create folder to save results
-    create_output_files()
+    create_output_files(config.output, execution_id)
+
+    return
 
     # Disable Matplot open figures alert as more than 20 figures are necessary to generate video
     plt.rcParams.update({'figure.max_open_warning': 0})
