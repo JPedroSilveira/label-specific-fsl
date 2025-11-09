@@ -1,6 +1,6 @@
 import hydra
 from src.config.config import Config
-from experiment import execute_experiment
+from src.experiment import execute_experiment
 from src.util.test_gpu import test_gpu
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
