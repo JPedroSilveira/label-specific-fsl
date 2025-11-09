@@ -1,48 +1,48 @@
 import uuid
 import hydra
 import matplotlib as plt
-from config.config import Config
-import config.general_config as general_config
+from src.config.config import Config
+import src.config.general_config as general_config
 from typing import List
-from evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
-from util.output_folder import create_output_files
-from util.selection_persistence import persist_rank, persist_weights, persist_execution_metrics
-from util.performance_util import ExecutionTimeCounter
-from util.print_util import print_with_time
-from util.dict_util import add_on_dict_list
-from data.DataLoader import load_dataset
-from data.DataSplitter import get_train_and_test_data_from_dataframe, get_dataset_with_k_fold
-from history.ExecutionHistory import ExecutionHistory
-from evaluation.execution_time.ExecutionTime import create_execution_time_table_and_chart
-from evaluation.informative_features.InformativeFeaturesScore import InformativeFeaturesScore
-from evaluation.informative_features.InformativeFeatures import calculate_informative_features_scores, create_heatmap, create_informative_features_scores_output
-from evaluation.stability.Stability import calculate_stability_scores, create_stability_table_and_charts, generate_feature_selection_stability_chart
-from evaluation.stability.StabilityScore import StabilityScore
-from evaluation.prediction.Prediction import calculate_prediction_score_from_selector, calculate_prediction_average_from_selector, calculate_prediction_scores_from_feature_selection, create_selectors_prediction_average_table_and_chart, create_predictors_table_and_chart, create_selectors_prediction_chart
-from evaluation.prediction.PredictionAverage import SelectorPredictionScoreStatistics, PredictorPredictionScoreStatistics
-from evaluation.prediction.PredictionScore import SelectorPredictionScore
-from evaluation.occlusion.Occlusion import calculate_and_persist_occlusion, persist_merged_occlusion
-from selector.enum.PredictionMode import PredictionMode
+from src.evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
+from src.util.output_folder import create_output_files
+from src.util.selection_persistence import persist_rank, persist_weights, persist_execution_metrics
+from src.util.performance_util import ExecutionTimeCounter
+from src.util.print_util import print_with_time
+from src.util.dict_util import add_on_dict_list
+from src.data.DataLoader import load_dataset
+from src.data.DataSplitter import get_train_and_test_data_from_dataframe, get_dataset_with_k_fold
+from src.history.ExecutionHistory import ExecutionHistory
+from src.evaluation.execution_time.ExecutionTime import create_execution_time_table_and_chart
+from src.evaluation.informative_features.InformativeFeaturesScore import InformativeFeaturesScore
+from src.evaluation.informative_features.InformativeFeatures import calculate_informative_features_scores, create_heatmap, create_informative_features_scores_output
+from src.evaluation.stability.Stability import calculate_stability_scores, create_stability_table_and_charts, generate_feature_selection_stability_chart
+from src.evaluation.stability.StabilityScore import StabilityScore
+from src.evaluation.prediction.Prediction import calculate_prediction_score_from_selector, calculate_prediction_average_from_selector, calculate_prediction_scores_from_feature_selection, create_selectors_prediction_average_table_and_chart, create_predictors_table_and_chart, create_selectors_prediction_chart
+from src.evaluation.prediction.PredictionAverage import SelectorPredictionScoreStatistics, PredictorPredictionScoreStatistics
+from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
+from src.evaluation.occlusion.Occlusion import calculate_and_persist_occlusion, persist_merged_occlusion
+from src.selector.enum.PredictionMode import PredictionMode
 
 
 # Feature Selectors
-from selector.LassoSelector import LassoSelectorWrapper #Rápido
-from selector.DecisionTreeSelector import DecisionTreeSelectorWrapper #Rápido
-from selector.RandomForestSelector import RandomForestSelectorWrapper #Rápido
-from selector.SHAPSelector import SHAPSelectorWrapper #Médio
-from selector.LIMESelector import LIMESelectorWrapper #Lento+
-from selector.DeepSHAPSelector import DeepSHAPSelectorWrapper #Médio
-from selector.KruskalWallisSelector import KruskalWallisSelectorWrapper
-from selector.ReliefFSelector import ReliefFSelectorWrapper
-from selector.FeatureSelectionLayerSelector import FeatureSelectionLayerSelectorWrapper
-from selector.fs_based.FeatureSelectionObserverSelector import FeatureSelectionObserverSelectorWrapper
-from selector.fs_based._export import RFSLayerSelectorV1Wrapper
-from selector.fs_based._export import MFSLayerV1ReLUSelector
-from selector.fs_based._export import MFSLayerV1SigmoidSelector
-from selector.fs_based._export import MFSLayerV1TanhSelector
-from selector.fs_based._export import FSRLayerV1ReLUSelector
-from selector.fs_based._export import FSRLayerV1SigmoidSelector
-from selector.fs_based._export import FSRLayerV1TanhSelector
+from src.selector.LassoSelector import LassoSelectorWrapper #Rápido
+from src.selector.DecisionTreeSelector import DecisionTreeSelectorWrapper #Rápido
+from src.selector.RandomForestSelector import RandomForestSelectorWrapper #Rápido
+from src.selector.SHAPSelector import SHAPSelectorWrapper #Médio
+from src.selector.LIMESelector import LIMESelectorWrapper #Lento+
+from src.selector.DeepSHAPSelector import DeepSHAPSelectorWrapper #Médio
+from src.selector.KruskalWallisSelector import KruskalWallisSelectorWrapper
+from src.selector.ReliefFSelector import ReliefFSelectorWrapper
+from src.selector.FeatureSelectionLayerSelector import FeatureSelectionLayerSelectorWrapper
+from src.selector.fs_based.FeatureSelectionObserverSelector import FeatureSelectionObserverSelectorWrapper
+from src.selector.fs_based._export import RFSLayerSelectorV1Wrapper
+from src.selector.fs_based._export import MFSLayerV1ReLUSelector
+from src.selector.fs_based._export import MFSLayerV1SigmoidSelector
+from src.selector.fs_based._export import MFSLayerV1TanhSelector
+from src.selector.fs_based._export import FSRLayerV1ReLUSelector
+from src.selector.fs_based._export import FSRLayerV1SigmoidSelector
+from src.selector.fs_based._export import FSRLayerV1TanhSelector
 
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
@@ -116,7 +116,7 @@ def execute_experiment(config: Config):
             selector_execution_time_counter = ExecutionTimeCounter().start()
 
             # Train selector or base model
-            selector.fit(train_dataset, test_dataset)
+            src.selector.fit(train_dataset, test_dataset)
         
             # Calculate and store execution time
             selector_execution_time = selector_execution_time_counter.print_end('Selector training').get_execution_time()
@@ -126,9 +126,9 @@ def execute_experiment(config: Config):
 
             # Calculate prediction score of selector if available
             prediction_score = None
-            if selector.get_prediction_mode() == PredictionMode.AVAILABLE:
+            if src.selector.get_prediction_mode() == PredictionMode.AVAILABLE:
                 prediction_score = calculate_prediction_score_from_selector(selector, test_dataset)
-                add_on_dict_list(selector_prediction_scores_by_selector, selector.get_class_name(), prediction_score)
+                add_on_dict_list(selector_prediction_scores_by_selector, src.selector.get_class_name(), prediction_score)
                 f1_score = prediction_score.report.general.f1_score
                 if f1_score > best_score:
                     best_selector = selector
@@ -139,9 +139,9 @@ def execute_experiment(config: Config):
                 best_score_index = i
 
             # Add selection results on history
-            history.add(selector, splitted_dataset, selector_execution_time, prediction_score)
+            src.history.add(selector, splitted_dataset, selector_execution_time, prediction_score)
         
-        if best_selector.get_prediction_mode() == PredictionMode.AVAILABLE:
+        if best_src.selector.get_prediction_mode() == PredictionMode.AVAILABLE:
             print_with_time(f'Best F1 score: {best_score}')
         
         print_with_time(f'Calculating selector aggregated metrics...')
@@ -150,9 +150,9 @@ def execute_experiment(config: Config):
         create_heatmap(best_selector, train_dataset)
 
         # Calculate selector prediction average
-        if best_selector.get_prediction_mode() == PredictionMode.AVAILABLE:
+        if best_src.selector.get_prediction_mode() == PredictionMode.AVAILABLE:
             selector_prediction_score_average = calculate_prediction_average_from_selector(history)
-            selector_prediction_score_average_by_selector[best_selector.get_class_name()] = selector_prediction_score_average
+            selector_prediction_score_average_by_selector[best_src.selector.get_class_name()] = selector_prediction_score_average
 
         # Persist weights
         persist_weights(history, test_dataset.get_feature_names(), best_score_index)
@@ -161,22 +161,22 @@ def execute_experiment(config: Config):
         persist_rank(history, test_dataset.get_feature_names(), best_score_index)
 
         # Calculate occlusion
-        if best_selector.get_prediction_mode() == PredictionMode.AVAILABLE:
+        if best_src.selector.get_prediction_mode() == PredictionMode.AVAILABLE:
             selector_occlusion_scores, selector_occlusion_scores_per_class = calculate_and_persist_occlusion(best_selector, test_dataset)
             occlusion_scores.extend(selector_occlusion_scores)
             occlusion_by_label_scores.extend(selector_occlusion_scores_per_class)
 
         # Calculate selected informative features percentages
         informative_features_scores = calculate_informative_features_scores(history, test_dataset)
-        informative_scores_by_selector[best_selector.get_class_name()] = informative_features_scores
+        informative_scores_by_selector[best_src.selector.get_class_name()] = informative_features_scores
 
         # Calculate prediction average using different predictors
         predictors_scores = calculate_prediction_scores_from_feature_selection(best_selector, splitted_dataset)
-        predictors_scores_by_selector[best_selector.get_class_name()] = predictors_scores
+        predictors_scores_by_selector[best_src.selector.get_class_name()] = predictors_scores
 
         # Calculate stability
         stability_scores = calculate_stability_scores(history)
-        stability_scores_by_selector[best_selector.get_class_name()] = stability_scores
+        stability_scores_by_selector[best_src.selector.get_class_name()] = stability_scores
 
         # Create stability metrics
         print_with_time(f'Creating feature selections output...')

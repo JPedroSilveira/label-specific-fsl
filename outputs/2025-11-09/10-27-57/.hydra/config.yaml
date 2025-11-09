@@ -1,0 +1,13 @@
+output:
+  general: outputs
+  temporary: outputs/temporary
+  execution_output: '[to be set dynamically]'
+  execution_output_folders:
+    selection_performance: selection_performance
+    feature_erasure: feature_erasure
+    predictive_performance: predictive_performance
+    weighted_tsne: weighted_tsne
+    stability: stability
+    execution_time: execution_time
+    informative_features: informative_features
+    raw_selection: raw_selection

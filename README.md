@@ -79,7 +79,7 @@ Once the environment is set up, you need to configure the evaluation parameters 
 
 ### 1. Configure the Feature Weighting Algorithms
 
-In the file run_evaluation.py, define the list of feature weighting algorithms (selectors) you want to compare in the selectors_types list.
+In the file run_src.evaluation.py, define the list of feature weighting algorithms (selectors) you want to compare in the selectors_types list.
 
 * Example:
     selectors_types = [MFSLayerV1ReLUSelector, LassoSelectorWrapper, LIMESelectorWrapper, DeepSHAPSelectorWrapper]
