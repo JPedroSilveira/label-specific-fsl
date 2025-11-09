@@ -4,7 +4,7 @@ from src.selector.enum.SelectionMode import SelectionMode
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity
 from src.evaluation.prediction.prediction_evaluator.BasePredictionEvaluator import BasePredictionEvaluator
 from src.history.ExecutionHistory import HistoryItem
-from src.data.DataSplitter import Dataset
+from src.domain.data.DatasetsCreator import Dataset
 
 
 class GeneralPredictionEvaluatorByRank(BasePredictionEvaluator):

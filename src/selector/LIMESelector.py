@@ -2,8 +2,8 @@ from src.config.general_config import LIME_K
 import lime
 import lime.lime_tabular
 import numpy as np
-from src.data.DataSplitter import get_train_and_test_data_from_dataset
-from src.data.Dataset import Dataset
+from src.domain.data.DatasetsCreator import get_train_and_test_data_from_dataset
+from src.model.Dataset import Dataset
 from src.model.ClassifierModel import ClassifierModel
 from src.pytorch_helpers.PyTorchFit import pytorch_fit
 from src.pytorch_helpers.PyTorchPredict import pytorch_predict_propabilities

@@ -1,18 +1,15 @@
 import numpy as np
-from sklearn.model_selection import StratifiedKFold
 import src.config.general_config as general_config
 from typing import Type
+from src.model.SplittedDataset import SplittedDataset
 from src.util.classification_report_util import calculate_classification_report
-from src.history.ExecutionHistory import HistoryItem
-from src.data.DataSplitter import SplittedDataset, Dataset
+from src.model.Dataset import Dataset
 from src.selector.BaseSelectorWrapper import BaseSelectorWrapper
 from src.selector.enum.SelectionMode import SelectionMode, is_compatible_mode
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity
 from src.predictor.BasePredictor import BasePredictor
 from src.evaluation.prediction.PredictionScore import PredictorPredictionScore
 from src.util.feature_selection_util import get_n_features_from_rank
-from src.util.performance_util import ExecutionTimeCounter
-from src.util.print_util import print_with_time
 
 
 class BasePredictionEvaluator():
@@ -53,7 +50,7 @@ class BasePredictionEvaluator():
         Verify if an evaluation should be execute based on selector capabilities.
         Example.: Given a selector that only creates a general rank, it can not be evaluated by an evaluator that considers per label specific ranks
         '''
-        return is_compatible_mode(self._get_selection_mode(), src.selector.get_selection_mode()) and self._get_selecion_specificity() in src.selector.get_selection_specificities()
+        return is_compatible_mode(self._get_selection_mode(), selector.get_selection_mode()) and self._get_selecion_specificity() in selector.get_selection_specificities()
 
     def calculate(self, selector: BaseSelectorWrapper, splitted_dataset: SplittedDataset) -> list[PredictorPredictionScore]:
         '''

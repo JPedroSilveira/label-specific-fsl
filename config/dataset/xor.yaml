@@ -1,0 +1,8 @@
+root: "dataset"
+filename: "xor_500samples_50features.csv"
+label_column: "class"
+ignored_columns: 
+  - "id"
+test_percentage: 30
+k_fold: 11
+k_fold_repeat: 1

@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.selector.BaseWeightSelectorWrapper import BaseWeightSelectorWrapper
 from src.selector.enum.PredictionMode import PredictionMode
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity

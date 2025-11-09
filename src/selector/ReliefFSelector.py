@@ -1,6 +1,6 @@
 from src.config.general_config import RELIEFF_K
 import numpy as np
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from sklearn.neighbors import NearestNeighbors
 from src.selector.BaseWeightSelectorWrapper import BaseWeightSelectorWrapper
 from src.selector.enum.PredictionMode import PredictionMode

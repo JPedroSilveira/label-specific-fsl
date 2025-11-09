@@ -14,7 +14,7 @@ from src.selector.enum.SelectionSpecificity import SelectionSpecificity
 from src.util.feature_selection_util import get_n_features_from_rank
 from src.util.numpy_util import get_interception_len, normalize
 from src.util.dict_util import add_on_dict_list
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_with_time
 

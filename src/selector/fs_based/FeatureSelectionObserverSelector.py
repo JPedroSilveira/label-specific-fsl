@@ -4,7 +4,7 @@ from typing import List
 from src.config.general_config import REGULARIZATION_LAMBDA
 from numpy import ndarray
 from torch import nn, Tensor
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.selector.BaseWeightSelectorWrapper import BaseWeightSelectorWrapper
 from src.selector.enum.PredictionMode import PredictionMode
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity

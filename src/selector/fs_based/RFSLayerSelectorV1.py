@@ -2,7 +2,7 @@ from src.config.general_config import REGULARIZATION_LAMBDA
 import torch
 import numpy as np
 from torch import nn, Tensor
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.model.ClassifierModel import ClassifierModel
 from src.pytorch_helpers.PyTorchFit import pytorch_fit
 from src.pytorch_helpers.PyTorchPredict import pytorch_predict_propabilities

@@ -7,8 +7,8 @@ import src.config.predictor_types_config as predictor_types_config
 from typing import List, Tuple
 from tabulate import tabulate
 from src.config.general_config import PREDICTOR_INITIAL_END, PREDICTOR_INITIAL_STEP, PREDICTOR_LIMIT, PREDICTOR_SHOULD_CREATE_INDIVIDUAL_CHARTS_FOR_EACH_SELECTION_SIZE, OUTPUT_PATH, PREDICTOR_PERFORMANCE_OUTPUT_SUB_PATH, PREDICTOR_STEP, PREDICTOR_STEP_ON_CHART, SELECTOR_PREDICTION_PERFORMANCE_OUTPUT_SUB_PATH
-from src.data.Dataset import Dataset
-from src.data.DataSplitter import SplittedDataset
+from src.model.Dataset import Dataset
+from src.model.SplittedDataset import SplittedDataset
 from src.util.dict_util import add_on_dict_list
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_load_bar, print_with_time

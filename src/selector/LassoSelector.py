@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.linear_model import Lasso
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.selector.BaseWeightSelectorWrapper import BaseWeightSelectorWrapper
 from src.selector.enum.SelectionMode import SelectionMode
 from src.selector.enum.PredictionMode import PredictionMode

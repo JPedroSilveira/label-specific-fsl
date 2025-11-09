@@ -1,5 +1,5 @@
 import numpy as np
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from sklearn.metrics import classification_report
 
 

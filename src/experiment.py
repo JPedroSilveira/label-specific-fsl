@@ -1,17 +1,23 @@
 import uuid
 import hydra
 import matplotlib as plt
-from src.config.config import Config
+from skimage import data
+
+from config.type import Config
+from src.domain.data.DatasetsCreator import DatasetsCreator
+from src.domain.data.KFoldCreator import KFoldCreator
+from src.domain.data.DatasetLoader import DatasetLoader
+from src.domain.folder.OutputFolderCreator import OutputFolderCreator
+
+# Non refactored imports
+
 import src.config.general_config as general_config
 from typing import List
 from src.evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
-from src.util.output_folder import create_output_files
 from src.util.selection_persistence import persist_rank, persist_weights, persist_execution_metrics
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_with_time
 from src.util.dict_util import add_on_dict_list
-from src.data.DataLoader import load_dataset
-from src.data.DataSplitter import get_train_and_test_data_from_dataframe, get_dataset_with_k_fold
 from src.history.ExecutionHistory import ExecutionHistory
 from src.evaluation.execution_time.ExecutionTime import create_execution_time_table_and_chart
 from src.evaluation.informative_features.InformativeFeaturesScore import InformativeFeaturesScore
@@ -46,32 +52,36 @@ from src.selector.fs_based._export import FSRLayerV1TanhSelector
 
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
-def execute_experiment(config: Config):
+def execute_experiment(config: Config) -> None:
+    # Disable Matplot open figures alert as more than 20 figures are necessary to generate video
+    plt.rcParams.update({'figure.max_open_warning': 0})
+    
     # Create execution id
     execution_id = str(uuid.uuid4())
     print(f'Execution ID: {execution_id}')
 
-    # Create folder to save results
-    create_output_files(config.output, execution_id)
-
-    return
-
-    # Disable Matplot open figures alert as more than 20 figures are necessary to generate video
-    plt.rcParams.update({'figure.max_open_warning': 0})
-
+    # Create outputs folders to save results
+    OutputFolderCreator.execute(config.output, execution_id)
+    
     # Start total execution time
     execution_time_counter = ExecutionTimeCounter().start()
 
     # Load data
-    dataframe = load_dataset(general_config.DATASET_FILE)
-
-    # Define dataset
-    splitted_dataset = get_train_and_test_data_from_dataframe(dataframe, test_size=general_config.TEST_SIZE)
-    general_train_dataset = splitted_dataset.get_train()
-    test_dataset = splitted_dataset.get_test()
+    dataframe = DatasetLoader.execute(config.dataset)
+    
+    # Split data into train and test sets
+    splitted_dataset = DatasetsCreator.execute(dataframe, config)
+    
+    print(f"Dataset features: {splitted_dataset.get_n_features()}")
+    print(f"Dataset labels: {splitted_dataset.get_n_labels()}")
+    print(f"Train samples: {splitted_dataset.get_train().get_n_samples()}")
+    print(f"Test samples: {splitted_dataset.get_test().get_n_samples()}")
 
     # Define KFold datasets
-    train_datasets = get_dataset_with_k_fold(general_train_dataset, general_config.K_FOLD, general_config.K_FOLD_REPEAT)
+    k_datasets = KFoldCreator.execute(splitted_dataset.get_train(), config)
+    print(f'K-Fold datasets created: {len(k_datasets)}')
+    
+    return
 
     # Define selector
     #selectors_types = [MFSLayerV1ReLUSelector, FeatureSelectionLayerSelectorWrapper, FeatureSelectionObserverSelectorWrapper, RFSLayerSelectorV1Wrapper, FSRLayerV1ReLUSelector]

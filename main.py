@@ -1,5 +1,5 @@
 import hydra
-from src.config.config import Config
+from config.type import Config
 from src.experiment import execute_experiment
 from src.util.test_gpu import test_gpu
 

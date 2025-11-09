@@ -1,5 +1,5 @@
 import numpy as np
-from src.data.DataSplitter import SplittedDataset
+from src.model.SplittedDataset import SplittedDataset
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 from src.selector.BaseSelectorWrapper import BaseSelectorWrapper
 from src.selector.enum.SelectionMode import SelectionMode

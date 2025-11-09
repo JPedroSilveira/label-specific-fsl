@@ -2,7 +2,7 @@ import torch
 import random
 import numpy as np
 from torch import nn
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.pytorch_helpers.PyTorchDataLoader import get_by_label_data_loaders, get_data_loader
 from src.util.print_util import print_load_bar
 from src.config.general_config import SHOULD_LOG_WHILE_TRAINING, USE_MODEL_REGULARIZATION, EPOCHS, USE_SGD_OPTIMIZER, DEFAULT_LEARNING_RATE

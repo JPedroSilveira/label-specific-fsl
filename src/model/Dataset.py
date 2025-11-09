@@ -1,11 +1,10 @@
 import numpy as np
+from scipy.sparse.tests.test_base import spmatrix
 from sklearn import preprocessing
 
 
 class Dataset():
-    def __init__(self, features: np.ndarray, labels: np.ndarray, label_types: list, feature_names: list[str], informative_features: list[int], informative_features_per_label: dict[int, list[int]]):
-        if len(features) == 0 or len(labels) == 0:
-            raise ValueError("Number of features and labels should be greater than zero")
+    def __init__(self, features: np.ndarray, labels: np.ndarray, label_types: list, feature_names: list[str], informative_features: list[int], informative_features_per_label: dict[int, list[int]]) -> None:
         self._features = features
         self._labels = labels
         self._label_types = label_types
@@ -16,7 +15,7 @@ class Dataset():
     def get_features(self) -> np.ndarray:
         return self._features
     
-    def get_encoded_labels(self):
+    def get_encoded_labels(self) -> np.ndarray[np.ndarray]:
         labels = np.array(self.get_labels()).reshape(-1, 1)
         one_hot_encoder = preprocessing.OneHotEncoder(handle_unknown='ignore', sparse_output=False).fit(labels)
         return one_hot_encoder.transform(labels)
@@ -24,20 +23,23 @@ class Dataset():
     def get_labels(self) -> np.ndarray:
         return self._labels
     
-    def get_n_features(self):
+    def get_n_samples(self) -> int:
+        return len(self._labels)
+    
+    def get_n_features(self) -> int:
         return len(self._features[0])
     
-    def get_n_labels(self):
+    def get_n_labels(self) -> int:
         return len(self._label_types)
     
-    def get_label_types(self):
+    def get_label_types(self) -> list:
         return self._label_types
     
-    def get_feature_names(self):
+    def get_feature_names(self) -> list[str]:
         return self._feature_names
     
-    def get_informative_features(self):
+    def get_informative_features(self) -> list[int]:
         return self._informative_features
     
-    def get_informative_features_per_label(self):
+    def get_informative_features_per_label(self) -> dict[int, list[int]]:
         return self._informative_features_per_label

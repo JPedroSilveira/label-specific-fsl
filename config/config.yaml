@@ -1,8 +1,15 @@
+defaults:
+    - _self_
+    - dataset: xor
+random_seed: 42
+feature:
+    informative_prefix: "informative_"
+    informative_per_label_prefix: "informative_per_label_"
 output:
-    general: "outputs"
-    temporary: "outputs/temporary"
-    execution_output: "[to be set dynamically]"
-    execution_output_folders:
+    root: "output"
+    temporary: "temporary"
+    execution_output:
+        root: "[to be set dynamically]"
         selection_performance: "selection_performance"
         feature_erasure: "feature_erasure"
         predictive_performance: "predictive_performance"

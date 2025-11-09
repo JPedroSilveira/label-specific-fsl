@@ -11,7 +11,7 @@ from src.util.dict_util import add_on_dict_list
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.utils.class_weight import compute_class_weight
 from src.config.general_config import OCCLUSION_INITIAL_END, OCCLUSION_STEP, SHOULD_CALCULATE_METRICS_BY_LABEL, OCCLUSION_BY_LOSS, OCCLUSION_LIMIT, OCCLUSION_INITIAL_STEP, OUTPUT_PATH, OCCLUSION_OUTPUT_SUB_PATH, SHOULD_SAVE_OCCLUSION_VIDEO, OCCLUSION_STEP_ON_CHART
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity
 from src.util.feature_selection_util import remove_n_features_from_inversed_rank, remove_n_features_from_rank

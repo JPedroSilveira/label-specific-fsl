@@ -1,5 +1,5 @@
 import numpy as np
-from src.data.Dataset import Dataset
+from src.model.Dataset import Dataset
 from src.selector.enum.SelectionMode import SelectionMode
 from src.selector.enum.PredictionMode import PredictionMode
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity

@@ -1,9 +1,7 @@
 import csv
-import numpy as np
 from typing import List
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 from src.config.general_config import OUTPUT_PATH, RAW_SELECTION_SUBPATH
-from src.data.Dataset import Dataset
 from src.history.ExecutionHistory import ExecutionHistory
 from src.selector.enum.SelectionMode import SelectionMode
 from src.selector.enum.SelectionSpecificity import SelectionSpecificity
