@@ -3,9 +3,12 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
-import src.config.predictor_types_config as predictor_types_config
 from typing import List, Tuple
 from tabulate import tabulate
+
+from src.domain.selector.types.base.BaseSelector import BaseSelector
+
+import src.config.predictor_types_config as predictor_types_config
 from src.config.general_config import PREDICTOR_INITIAL_END, PREDICTOR_INITIAL_STEP, PREDICTOR_LIMIT, PREDICTOR_SHOULD_CREATE_INDIVIDUAL_CHARTS_FOR_EACH_SELECTION_SIZE, OUTPUT_PATH, PREDICTOR_PERFORMANCE_OUTPUT_SUB_PATH, PREDICTOR_STEP, PREDICTOR_STEP_ON_CHART, SELECTOR_PREDICTION_PERFORMANCE_OUTPUT_SUB_PATH
 from src.model.Dataset import Dataset
 from src.model.SplittedDataset import SplittedDataset
@@ -13,14 +16,13 @@ from src.util.dict_util import add_on_dict_list
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_load_bar, print_with_time
 from src.util.classification_report_util import calculate_classification_report
-from src.selector.BaseSelectorWrapper import BaseSelectorWrapper, PredictionMode
 from src.history.ExecutionHistory import ExecutionHistory
 from src.evaluation.prediction.prediction_evaluator.BasePredictionEvaluator import BasePredictionEvaluator
 from src.evaluation.prediction.PredictionScore import BasePredictionScore, SelectorPredictionScore, PredictorPredictionScore
 from src.evaluation.prediction.PredictionAverage import PredictorPredictionScoreStatistics, SelectorPredictionScoreStatistics, PredictionScoreAverageByLabel
 
 
-def calculate_prediction_score_from_selector(selector: BaseSelectorWrapper, test_dataset: Dataset) -> SelectorPredictionScore:
+def calculate_prediction_score_from_selector(selector: BaseSelector, test_dataset: Dataset) -> SelectorPredictionScore:
     '''
     Given a trained selector capable of doing preditions and a test dataset, calculate it's prediction scores
     '''
@@ -28,8 +30,8 @@ def calculate_prediction_score_from_selector(selector: BaseSelectorWrapper, test
     print_with_time("Calculating prediction score from selector")
     timer_counter = ExecutionTimeCounter().start()
     # Verify if selector is able to do predictions
-    if src.selector.get_prediction_mode() != PredictionMode.UNAVAILABLE:
-        y_pred = src.selector.predict(test_dataset)
+    if selector.can_predict():
+        y_pred = selector.predict(test_dataset)
         report = calculate_classification_report(test_dataset, y_pred)
         score = SelectorPredictionScore(test_dataset.get_n_features(), selector, report)
         # Print selector prediction F1 Score
@@ -37,12 +39,12 @@ def calculate_prediction_score_from_selector(selector: BaseSelectorWrapper, test
     timer_counter.print_end("Prediction selector test")
     return score
 
-def calculate_prediction_scores_from_feature_selection(selector: BaseSelectorWrapper, splitted_dataset: SplittedDataset) -> list[PredictorPredictionScoreStatistics]:
+def calculate_prediction_scores_from_feature_selection(selector: BaseSelector, splitted_dataset: SplittedDataset) -> list[PredictorPredictionScoreStatistics]:
     '''
     Given a trained selector and a dataset with train and test data, calculate the prediction scores of predictions models trained
     with the feature selections
     '''
-    score_averages: list[PredictorPredictionScoreStatistics] = []
+    score_averages: List[PredictorPredictionScoreStatistics] = []
     print_with_time('Calculating predictor scores...')
     time_counter = ExecutionTimeCounter().start()
     # Calculate prediction score for each feature selection size
@@ -56,7 +58,7 @@ def calculate_prediction_scores_from_feature_selection(selector: BaseSelectorWra
             # between general and per label feature selections and between rank and weight selections
             for evaluator_type in predictor_types_config.PREDICTION_EVALUATOR_TYPES:
                 #print_with_time(f'Running prediction evaluator {evaluator_type.get_name()}')
-                scores: list[BasePredictionScore] = []
+                scores: List[BasePredictionScore] = []
                 evaluator: BasePredictionEvaluator = evaluator_type(selector, selection_size, predictor_type)
                 # Verify if evaluation is able to evaluate given the specific seletor
                 # Example.: A selector that only defines a rank of features can not be evaluated by a weight evaluator
@@ -64,7 +66,7 @@ def calculate_prediction_scores_from_feature_selection(selector: BaseSelectorWra
                     # Executes the evaluator, that you will a list of scores based on multiple trainings
                     scores = evaluator.calculate(selector, splitted_dataset)
                 if len(scores) > 0:
-                    score_average: PredictorPredictionScoreStatistics = _calculate_prediction_average(src.selector.get_n_labels(), src.selector.get_class_name(), scores)
+                    score_average: PredictorPredictionScoreStatistics = _calculate_prediction_average(selector.get_n_labels(), selector.get_class_name(), scores)
                     score_average.predictor_name = predictor_type.get_name()
                     score_average.evaluator_name = evaluator_type.get_name()
                     score_average.selection_size = selection_size
@@ -84,8 +86,8 @@ def calculate_prediction_average_from_selector(history: ExecutionHistory):
     '''
     print_with_time("Calculating prediction score averages from src.selector...")
     time_counter = ExecutionTimeCounter().start()
-    scores = list(map(lambda item: item.get_prediction_score(), src.history.get_items()))
-    average = _calculate_prediction_average(src.history.get_n_labels(), src.history.get_selector_name(), scores)
+    scores = list(map(lambda item: item.get_prediction_score(), history.get_items()))
+    average = _calculate_prediction_average(history.get_n_labels(), history.get_selector_name(), scores)
     time_counter.print_end("Selector prediction score average calculation")
     return average
 
@@ -102,12 +104,12 @@ def create_selectors_prediction_chart(selector_prediction_scores_by_selector: di
     '''
     # Extract data for plotting
     selector_prediction_f1_scores_by_selector: dict[str, List[float]] = {}
-    for selector in selector_prediction_scores_by_src.selector.keys():
+    for selector in selector_prediction_scores_by_selector.keys():
         scores = selector_prediction_scores_by_selector[selector]
         for score in scores:
             add_on_dict_list(selector_prediction_f1_scores_by_selector, selector, score.report.general.f1_score)
     data = [selector_prediction_f1_scores_by_selector[label] for label in selector_prediction_f1_scores_by_selector]
-    labels = list(selector_prediction_scores_by_src.selector.keys())
+    labels = list(selector_prediction_scores_by_selector.keys())
     # Set figure dimensions
     plt.figure()
     # Create the boxplot
@@ -132,13 +134,13 @@ def _get_predictor_sizes(n_features: int):
     return steps
 
 def _create_prediction_evolution_chart_with_errorbar(predictors_scores_by_selector: dict[str, List[PredictorPredictionScoreStatistics]]):
-    for selector in predictors_scores_by_src.selector.keys():
-        selector_scores = predictors_scores_by_src.selector.get(selector)
+    for selector in predictors_scores_by_selector.keys():
+        selector_scores = predictors_scores_by_selector.get(selector)
         scores_by_predictor: dict[str, List[PredictorPredictionScoreStatistics]] = {}
         for score in selector_scores:
             add_on_dict_list(scores_by_predictor, score.predictor_name, score)
-        for predictor in scores_by_src.predictor.keys():
-            predictor_scores = scores_by_src.predictor.get(predictor)
+        for predictor in scores_by_predictor.keys():
+            predictor_scores = scores_by_predictor.get(predictor)
             scores_by_evaluator: dict[str, List[PredictorPredictionScoreStatistics]] = {}
             for score in predictor_scores:
                 add_on_dict_list(scores_by_evaluator, score.evaluator_name, score)
@@ -163,9 +165,9 @@ def _create_prediction_evolution_chart_with_errorbar(predictors_scores_by_select
                 plt.close()
             
 def _create_selectors_prediction_average_chart(selector_prediction_score_average_by_selector: dict[str, SelectorPredictionScoreStatistics]):
-    selectors = list(selector_prediction_score_average_by_src.selector.keys())
+    selectors = list(selector_prediction_score_average_by_selector.keys())
     label_scores: dict[str, Tuple[int]] = { }
-    for score in selector_prediction_score_average_by_src.selector.values():
+    for score in selector_prediction_score_average_by_selector.values():
         for score_by_label in score.by_label:
             add_on_dict_list(label_scores, score_by_label.label, (round(score_by_label.f1_score_avg, 2), round(score_by_label.f1_score_var, 2)))
     x = np.arange(len(selectors))  # the label locations
@@ -200,7 +202,7 @@ def _create_selectors_prediction_average_table(selector_prediction_score_average
     # Add rows to general list and by label list
     general_data = []
     by_label_data = []
-    for score in selector_prediction_score_average_by_src.selector.values():
+    for score in selector_prediction_score_average_by_selector.values():
         general_data.append([score.selector_name, f'{round(score.accuracy_avg, 5)};{round(score.accuracy_var, 5)}', f'{round(score.precision_avg, 5)};{round(score.precision_var, 5)}', f'{round(score.recall_avg, 5)};{round(score.recall_var, 5)}', f'{round(score.f1_score_avg, 5)};{round(score.f1_score_var, 5)}'])
         for score_by_label in score.by_label:
             by_label_data.append([score.selector_name, score_by_label.label, f'{round(score_by_label.precision_avg, 5)};{round(score_by_label.precision_var, 5)}', f'{round(score_by_label.recall_avg, 5)};{round(score_by_label.recall_var, 5)}', f'{round(score_by_label.f1_score_avg, 5)};{round(score_by_label.f1_score_var, 5)}'])
@@ -240,11 +242,11 @@ def _create_prediction_evolution_chart(predictors_scores_by_selector: dict[str, 
     '''
     # Get all scores by predictor
     scores_by_predictor: dict[str, List[PredictorPredictionScoreStatistics]] = {}
-    for scores in predictors_scores_by_src.selector.values():
+    for scores in predictors_scores_by_selector.values():
         for score in scores:
             add_on_dict_list(scores_by_predictor, score.predictor_name, score)
     # Create one per each predictor
-    for predictor in scores_by_src.predictor.keys():
+    for predictor in scores_by_predictor.keys():
         data = {
             'NumberOfFeatures': [],
             'Algorithm': [],
@@ -257,7 +259,7 @@ def _create_prediction_evolution_chart(predictors_scores_by_selector: dict[str, 
             data['F1 score'].append(score.f1_score_avg)
         _persist_evolution_chart_to_file(data, f'predictor-{predictor}')
     # Create one per each selector
-    for selector in predictors_scores_by_src.selector.keys():
+    for selector in predictors_scores_by_selector.keys():
         data = {
             'NumberOfFeatures': [],
             'Algorithm': [],
@@ -299,7 +301,7 @@ def _persist_evolution_chart_to_file(data: dict[str, list], name: str):
     plt.close()
 
 def _create_predictiors_prediction_chart(predictors_scores_by_selector: dict[str, list[PredictorPredictionScoreStatistics]], n_features: int):
-    selectors = list(predictors_scores_by_src.selector.keys())
+    selectors = list(predictors_scores_by_selector.keys())
     selection_sizes = _get_predictor_sizes(n_features)
     # Generate a chart for each predictor type
     for predictor_type in predictor_types_config.PREDICTOR_TYPES:
@@ -310,7 +312,7 @@ def _create_predictiors_prediction_chart(predictors_scores_by_selector: dict[str
             # Generate a chart for each selection size
             for selection_size in selection_sizes:
                 label_scores = { }
-                for scores in predictors_scores_by_src.selector.values():
+                for scores in predictors_scores_by_selector.values():
                     for score in scores:
                         if score.selection_size != selection_size or score.evaluator_name != evaluator_name or score.predictor_name != predictor_name:
                             continue
@@ -347,7 +349,7 @@ def _create_predictors_prediction_table(predictors_scores_by_selector: dict[str,
     # Add rows to general list and by label list
     general_data = []
     by_label_data = []
-    for scores in predictors_scores_by_src.selector.values():
+    for scores in predictors_scores_by_selector.values():
         for score in scores:
             general_data.append([score.predictor_name, score.selector_name, score.evaluator_name, score.selection_size, f'{round(score.accuracy_avg, 5)};{round(score.accuracy_var, 5)}', f'{round(score.precision_avg, 5)};{round(score.precision_var, 5)}', f'{round(score.recall_avg, 5)};{round(score.recall_var, 5)}', f'{round(score.f1_score_avg, 5)};{round(score.f1_score_var, 5)}'])
             for score_by_label in score.by_label:
@@ -382,7 +384,7 @@ def _create_predictors_prediction_table(predictors_scores_by_selector: dict[str,
         csvwriter.writerow(by_label_data[0])  
         csvwriter.writerows(by_label_data[1:])
 
-def _calculate_prediction_average(n_labels: int, selector_name: str, scores: list[SelectorPredictionScore | PredictorPredictionScore]) -> SelectorPredictionScoreStatistics | PredictorPredictionScoreStatistics:
+def _calculate_prediction_average(n_labels: int, selector_name: str, scores: List[SelectorPredictionScore | PredictorPredictionScore]) -> SelectorPredictionScoreStatistics | PredictorPredictionScoreStatistics:
     '''
     Given a list of prediction scores, calculate the prediction average
     '''

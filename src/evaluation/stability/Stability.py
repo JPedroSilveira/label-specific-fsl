@@ -6,37 +6,39 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from typing import List
 from tabulate import tabulate
+
+from src.model.SelectorSpecificity import SelectorSpecificity
+from src.model.SelectorType import SelectorType
+from src.domain.selector.types.base.BaseSelector import BaseSelector
 from src.config.general_config import MAX_FEATURES_TO_DISPLAY_ON_SELECTION_STABILITY_CHART, STABILITY_INITIAL_END, STABILITY_INITIAL_STEP, STABILITY_LIMIT, STABILITY_SHOULD_CREATE_INDIVIDUAL_CHARTS_FOR_EACH_SELECTION_SIZE, SHOULD_CALCULATE_METRICS_BY_LABEL, OUTPUT_PATH, STABILITY_OUTPUT_SUB_PATH, STABILITY_STEP, STABILITY_STEP_ON_EVOLUTION_CHART
 from src.history.ExecutionHistory import ExecutionHistory
 from src.config.stability_metrics_config import STABILITY_METRICS_TYPES
 from src.evaluation.stability.StabilityScore import StabilityScore
-from src.selector.BaseSelectorWrapper import BaseSelectorWrapper, SelectionSpecificity
-from src.selector.enum.SelectionMode import SelectionMode
 from src.util.dict_util import add_on_dict_list
 from src.util.matrix_util import sort_matrix_columns
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_load_bar, print_with_time
 
 
-def generate_feature_selection_stability_chart(best_selector: BaseSelectorWrapper, history: ExecutionHistory, feature_names: List[str]):
+def generate_feature_selection_stability_chart(best_selector: BaseSelector, history: ExecutionHistory, feature_names: List[str]) -> None:
     '''
     Given the history at least one item generate bump charts to compare the general and by label feature selections when available.
     Model should have feature selection by rank.
     '''
-    if len(src.history.get_items()) == 0:
+    if len(history.get_items()) == 0:
         return
-    if SelectionMode.RANK not in src.history.get_available_seletion_modes():
+    if SelectorType.RANK not in history.get_available_seletion_modes():
         return
     # Define features to be displayed
-    limit = min(src.history.get_n_features(), MAX_FEATURES_TO_DISPLAY_ON_SELECTION_STABILITY_CHART)
-    features_to_display = best_src.selector.get_general_ranking()
+    limit = min(history.get_n_features(), MAX_FEATURES_TO_DISPLAY_ON_SELECTION_STABILITY_CHART)
+    features_to_display = best_selector.get_general_ranking()
     if len(features_to_display) > limit:
         features_to_display = features_to_display[0:limit]
     # Generate chart for general rank when available
-    if SelectionSpecificity.GENERAL in src.history.get_selection_specificities():
+    if SelectorSpecificity.GENERAL in history.get_selection_specificities():
         _generate_feature_selection_chart_for_general(history, feature_names, features_to_display)
     # Generate charts for each label rank when available
-    if SelectionSpecificity.PER_LABEL in src.history.get_selection_specificities():
+    if SelectorSpecificity.PER_LABEL in history.get_selection_specificities():
         _generate_feature_selection_chart_for_label(history, feature_names, features_to_display)
 
 def calculate_stability_scores(history: ExecutionHistory) -> List[StabilityScore]:
@@ -49,18 +51,18 @@ def calculate_stability_scores(history: ExecutionHistory) -> List[StabilityScore
     scores = []
     for Metric in STABILITY_METRICS_TYPES:
         print_with_time(f"Stability for {Metric.get_name()}")
-        selection_sizes = _get_stability_sizes(src.history.get_n_features())
-        specificities = src.history.get_selection_specificities()
+        selection_sizes = _get_stability_sizes(history.get_n_features())
+        specificities = history.get_selection_specificities()
         for i, selection_size in enumerate(selection_sizes):
             print_load_bar(i, len(selection_sizes))
             if selection_size == 1:
                 continue
             metric = Metric(history, selection_size)
             if metric.should_execute():
-                if SelectionSpecificity.GENERAL in specificities:
-                    scores.append(metric.calculate_general(src.history.get_selector_name()))
-                if SHOULD_CALCULATE_METRICS_BY_LABEL and SelectionSpecificity.PER_LABEL in specificities:
-                    scores.extend(metric.calculate_per_class(src.history.get_selector_name()))
+                if SelectorSpecificity.GENERAL in specificities:
+                    scores.append(metric.calculate_general(history.get_selector_name()))
+                if SHOULD_CALCULATE_METRICS_BY_LABEL and SelectorSpecificity.PER_LABEL in specificities:
+                    scores.extend(metric.calculate_per_class(history.get_selector_name()))
     time_counter.print_end("Stability scores calculation")
     return scores
 
@@ -88,7 +90,7 @@ def _create_stability_table(stability_scores_by_selector: dict[str, List[Stabili
     '''
     # Add rows to data list
     data = []
-    for selector_name, selector_scores in stability_scores_by_src.selector.items():
+    for selector_name, selector_scores in stability_scores_by_selector.items():
         for score in selector_scores:
             data.append([selector_name, score.get_metric(), score.get_target_label(), score.get_selection_size(), score.get_score()])
     # Sort by selection size
@@ -117,7 +119,7 @@ def _create_stability_charts(stability_scores_by_selector: dict[str, List[Stabil
     with scores from all selectores.
     The image will be persisted to an output file.
     '''
-    selectors = list(stability_scores_by_src.selector.keys())
+    selectors = list(stability_scores_by_selector.keys())
     selection_sizes = _get_stability_sizes()
     # Create a chart per metric
     for Metric in STABILITY_METRICS_TYPES:
@@ -160,7 +162,7 @@ def _create_stability_evolution_chart(stability_scores_by_selector: dict[str, Li
     '''
     # Get all scores by metric and label
     score_by_metric_and_label = {}
-    for scores in stability_scores_by_src.selector.values():
+    for scores in stability_scores_by_selector.values():
         for score in scores:
             add_on_dict_list(score_by_metric_and_label, f'{score.get_metric()} - Label {score.get_target_label()}', score)
             
@@ -179,7 +181,7 @@ def _create_stability_evolution_chart(stability_scores_by_selector: dict[str, Li
                 data['Score'].append(score.get_score())
         _persist_evolution_chart_to_file(data, metric_and_label, n_features)
     # Create one per each metric and selector
-    for selector in stability_scores_by_src.selector.keys():
+    for selector in stability_scores_by_selector.keys():
         scores = stability_scores_by_selector[selector]
         # Get all scores by metric and label
         selector_score_by_metric: dict[str, List[StabilityScore]] = {}
@@ -231,7 +233,7 @@ def _generate_feature_selection_chart(title: str, filename: str, ranks: List[np.
     # Create list with all executions
     executions = np.arange(0, len(ranks), 1)
     # Create list with all possible positions
-    rank_positions = np.arange(0, max(_get_stability_sizes(src.history.get_n_features())) + 1, STABILITY_STEP_ON_EVOLUTION_CHART)
+    rank_positions = np.arange(0, max(_get_stability_sizes(history.get_n_features())) + 1, STABILITY_STEP_ON_EVOLUTION_CHART)
     # Set figure dimensions
     plt.figure().set_size_inches(36, 24)
     # Create a row for each rank
@@ -282,12 +284,12 @@ def _generate_feature_selection_chart(title: str, filename: str, ranks: List[np.
 def _generate_feature_selection_chart_for_general(history: ExecutionHistory, feature_names: List[str], features_to_display: List[int]):
     ranks: List[np.ndarray] = []
     # Extract rank from each training
-    for item in src.history.get_items():
+    for item in history.get_items():
         ranks.append(item.get_general_ranking())
     # Create chart
     _generate_feature_selection_chart(
-        title=f'{src.history.get_selector_name()} - Comparison between different trainings - General', 
-        filename=f'selector-rank-comparison-{src.history.get_selector_name().lower()}-general', 
+        title=f'{history.get_selector_name()} - Comparison between different trainings - General', 
+        filename=f'selector-rank-comparison-{history.get_selector_name().lower()}-general', 
         ranks=ranks, 
         history=history, 
         feature_names=feature_names,
@@ -296,15 +298,15 @@ def _generate_feature_selection_chart_for_general(history: ExecutionHistory, fea
 
 def _generate_feature_selection_chart_for_label(history: ExecutionHistory, feature_names: List[str], features_to_display: List[int]):
    # Create chart for each label
-   for label in range(0, src.history.get_n_labels()):
+   for label in range(0, history.get_n_labels()):
         ranks: List[np.ndarray] = []
         # Extract rank from each training
-        for item in src.history.get_items():
+        for item in history.get_items():
             ranks.append(item.get_rank_per_class()[label])
         # Create chart
         _generate_feature_selection_chart(
-            title=f'{src.history.get_selector_name()} - Comparison between different trainings - Label {label}', 
-            filename=f'selector-rank-comparison-{src.history.get_selector_name().lower()}-label-{label}', 
+            title=f'{history.get_selector_name()} - Comparison between different trainings - Label {label}', 
+            filename=f'selector-rank-comparison-{history.get_selector_name().lower()}-label-{label}', 
             ranks=ranks, 
             history=history, 
             feature_names=feature_names,

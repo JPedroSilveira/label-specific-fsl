@@ -1,9 +1,11 @@
-import numpy as np
+from typing import List
 from itertools import combinations
+import numpy as np
+
+from src.model.SelectorType import SelectorType
+from src.model.SelectorSpecificity import SelectorSpecificity
 from src.history.ExecutionHistory import ExecutionHistory
 from src.evaluation.stability.StabilityScore import StabilityScore
-from src.selector.enum.SelectionMode import SelectionMode
-from src.selector.enum.SelectionSpecificity import SelectionSpecificity
 
 
 class BaseStabilityMetric():
@@ -60,7 +62,7 @@ class BaseStabilityMetric():
             scores_per_class.append(StabilityScore(self.get_class_name(), self._selection_size, score, selector_name, target_label=labels[index]))
         return scores_per_class
     
-    def _get_top_n_from_selections(self, selections: list[np.ndarray]):
+    def _get_top_n_from_selections(self, selections: List[np.ndarray]):
         top_n_from_selections = []
         for selection in selections:
             top_n_from_selections.append(selection[:self._selection_size])  
@@ -73,13 +75,13 @@ class BaseStabilityMetric():
         ])
     
     def _get_labels(self):
-        return self._src.history.get_labels()
+        return self._history.get_labels()
     
-    def _get_available_selecion_modes(self) -> list[SelectionMode]:
-        return self._src.history.get_available_seletion_modes()
+    def _get_available_selector_types(self) -> List[SelectorType]:
+        return self._history.get_available_seletion_modes()
     
-    def _get_available_selecion_specificities(self) -> list[SelectionSpecificity]:
-        return self._src.history.get_selection_specificities()
+    def _get_available_selectors_specificity(self) -> List[SelectorSpecificity]:
+        return self._history.get_selection_specificities()
     
     def _split_selections_per_class(self, selections):
         selections_per_class = [[] for _ in self._get_labels()]

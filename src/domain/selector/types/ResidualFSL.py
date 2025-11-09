@@ -3,14 +3,13 @@ import numpy as np
 from torch import nn, Tensor
 
 from config.type import DatasetConfig
+from src.domain.pytorch.PyTorchPredict import PyTorchPredict
+from src.domain.pytorch.PyTorchFit import PyTorchFit
 from src.device import device
 from src.model.Dataset import Dataset
 from src.model.ClassifierModel import ClassifierModel
 from src.model.SelectorSpecificity import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-
-from src.pytorch_helpers.PyTorchFit import pytorch_fit
-from src.pytorch_helpers.PyTorchPredict import pytorch_predict_propabilities
 
 
 class ResidualFSL(BaseSelectorWeight):
@@ -29,14 +28,14 @@ class ResidualFSL(BaseSelectorWeight):
         return SelectorSpecificity.PER_LABEL
 
     def fit(self, train_dataset: Dataset, test_dataset: Dataset) -> None: 
-        pytorch_fit(self._model, train_dataset)
+        PyTorchFit.execute(self._model, train_dataset, self._config)
     
     def predict(self, dataset: Dataset) -> np.ndarray:
         y_pred = self.predict_probabilities(dataset)
         return np.argmax(y_pred, 1)
     
     def predict_probabilities(self, dataset: Dataset, use_softmax: bool=True) -> np.ndarray:
-        return pytorch_predict_propabilities(self._model, dataset.get_features(), use_softmax)
+        return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
     
     def get_general_weights(self) -> np.ndarray:
         return np.sum(self.get_weights_per_class(), axis=0)

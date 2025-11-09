@@ -1,26 +1,26 @@
 import shap
 import numpy as np
 
+from src.domain.pytorch.PyTorchPredict import PyTorchPredict
+from src.domain.pytorch.PyTorchFit import PyTorchFit
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
 from src.model.SelectorSpecificity import SelectorSpecificity
 from src.domain.data.DatasetLoader import DatasetConfig
 from src.model.Dataset import Dataset
 from src.model.ClassifierModel import ClassifierModel
-from src.pytorch_helpers.PyTorchFit import pytorch_fit
-from src.pytorch_helpers.PyTorchPredict import pytorch_predict_propabilities
-from src.pytorch_helpers.PyTorchData import convert_nparray_to_tensor
+from src.device import device
 
 from src.util.array_util import get_weight_per_class_from_shap
-from src.util.device_util import get_device
+from src.util.numpy_util import convert_nparray_to_tensor
 
 
 class DeepSHAP(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
         super().__init__(n_features, n_labels)
-        device = get_device()
         self._model = ClassifierModel(n_features, n_labels).to(device)
         self._k = config.shap_k
         self._representative_k = config.shap_representative_k
+        self._config = config
 
     def get_name() -> str:
         return "DeepSHAP"
@@ -38,7 +38,7 @@ class DeepSHAP(BaseSelectorWeight):
         representative_k = self._representative_k
         if representative_k > len(train_dataset.get_features()):
             representative_k = len(train_dataset.get_features())
-        pytorch_fit(self._model, train_dataset)
+        PyTorchFit.execute(self._model, train_dataset, self._config)
         shap_samples = shap.sample(test_dataset.get_features(), k)
         shap_representative = shap.sample(train_dataset.get_features(), representative_k)
         explainer = shap.DeepExplainer(model=self._model, data=convert_nparray_to_tensor(shap_representative))
@@ -49,7 +49,7 @@ class DeepSHAP(BaseSelectorWeight):
         return np.argmax(y_pred, 1)
     
     def predict_probabilities(self, dataset: Dataset, use_softmax: bool=True) -> np.ndarray:
-        return pytorch_predict_propabilities(self._model, dataset.get_features(), use_softmax)
+        return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
     
     def get_general_weights(self) -> np.ndarray:
         return np.max(self.get_weights_per_class(), axis=0)

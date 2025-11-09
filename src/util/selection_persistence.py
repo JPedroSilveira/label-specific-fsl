@@ -1,17 +1,19 @@
 import csv
 from typing import List
+
+from src.model.SelectorSpecificity import SelectorSpecificity
+from src.model.SelectorType import SelectorType
+
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 from src.config.general_config import OUTPUT_PATH, RAW_SELECTION_SUBPATH
 from src.history.ExecutionHistory import ExecutionHistory
-from src.selector.enum.SelectionMode import SelectionMode
-from src.selector.enum.SelectionSpecificity import SelectionSpecificity
-from src.util.numpy_util import normalize, sort
+from src.util.numpy_util import normalize
 from src.util.print_util import print_with_time
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.dict_util import add_on_dict_list
 
 
-def _write_to_csv_file(data: list[list], filename: str):
+def _write_to_csv_file(data: List[List], filename: str) -> None:
     '''
     Write data to CSV
     '''
@@ -23,7 +25,7 @@ def _write_to_csv_file(data: list[list], filename: str):
         # Write the data rows
         csvwriter.writerows(data[1:])
 
-def _write_dict_to_csv_file(dict_data: dict[str, List], header: List[str], filename: str):
+def _write_dict_to_csv_file(dict_data: dict[str, List], header: List[str], filename: str) -> None:
     '''
     Write data to CSV
     '''
@@ -38,7 +40,7 @@ def _write_dict_to_csv_file(dict_data: dict[str, List], header: List[str], filen
         # Write the data rows
         csvwriter.writerows(data)
 
-def _persist_selection(filename: str, selections: list, feature_names: List[str], is_weight=False):
+def _persist_selection(filename: str, selections: List, feature_names: List[str], is_weight=False) -> None:
     '''
     Persist weights in TSNE format
     '''
@@ -55,7 +57,7 @@ def _persist_selection(filename: str, selections: list, feature_names: List[str]
     # Write values to csv
     _write_to_csv_file(data, filename)
 
-def _persist_per_label_weights(history: ExecutionHistory, feature_names: list[str], best_score_index: int):
+def _persist_per_label_weights(history: ExecutionHistory, feature_names: List[str], best_score_index: int) -> None:
     '''
     Persist weights per label in TSNE format
     '''
@@ -95,7 +97,7 @@ def _persist_per_label_weights(history: ExecutionHistory, feature_names: list[st
             )
             
 
-def _persist_general_weights(history: ExecutionHistory, feature_names: list[str], best_score_index: int):
+def _persist_general_weights(history: ExecutionHistory, feature_names: List[str], best_score_index: int) -> None:
     '''
     Persist general weights in TSNE format
     '''
@@ -131,7 +133,7 @@ def _persist_general_weights(history: ExecutionHistory, feature_names: list[str]
             is_weight=True
         )
 
-def _persist_per_label_ranks(history: ExecutionHistory, feature_names: list[str], best_score_index: int):
+def _persist_per_label_ranks(history: ExecutionHistory, feature_names: List[str], best_score_index: int) -> None:
     '''
     Persist ranks per label
     '''
@@ -153,14 +155,14 @@ def _persist_per_label_ranks(history: ExecutionHistory, feature_names: list[str]
             )
 
 
-def _persist_general_ranks(history: ExecutionHistory, feature_names: list[str], best_score_index: int):
+def _persist_general_ranks(history: ExecutionHistory, feature_names: List[str], best_score_index: int) -> None:
     '''
     Persist general weights in TSNE format
     '''
     # Persist a file for each execution
-    for index, item in enumerate(src.history.get_items()):
+    for index, item in enumerate(history.get_items()):
         isBestScore = best_score_index == index
-        filename = f"{src.history.get_selector_name().lower()}-rank-general-item-{str(index)}"
+        filename = f"{history.get_selector_name().lower()}-rank-general-item-{str(index)}"
         if isBestScore:
             filename = f"{filename}-best-score"
         rank = item.get_general_ranking()
@@ -171,42 +173,42 @@ def _persist_general_ranks(history: ExecutionHistory, feature_names: list[str], 
             is_weight=False
         )
 
-def persist_rank(history: ExecutionHistory, feature_names: list[str], best_score_index: int):
+def persist_rank(history: ExecutionHistory, feature_names: List[str], best_score_index: int) -> None:
     '''
     Persist all executions rank
     '''
     # Verify if ranks are available
-    if SelectionMode.RANK not in src.history.get_available_seletion_modes():
+    if SelectorType.RANK not in history.get_available_seletion_modes():
         return
     print_with_time("Persisting ranks...")
     time_count = ExecutionTimeCounter().start()
-    if SelectionSpecificity.GENERAL in src.history.get_selection_specificities():
+    if SelectorSpecificity.GENERAL in history.get_selection_specificities():
         _persist_general_ranks(history, feature_names, best_score_index)
-    if SelectionSpecificity.PER_LABEL in src.history.get_selection_specificities():
+    if SelectorSpecificity.PER_LABEL in history.get_selection_specificities():
         _persist_per_label_ranks(history, feature_names, best_score_index)
     time_count.print_end("Rank persistence")
 
-def persist_weights(history: ExecutionHistory, feature_names: list[str], best_score_index: int):
+def persist_weights(history: ExecutionHistory, feature_names: List[str], best_score_index: int) -> None:
     '''
     Persist all executions weights in TSNE format
     '''
     # Verify if weights are available
-    if SelectionMode.WEIGHT not in src.history.get_available_seletion_modes():
+    if SelectorType.WEIGHT not in history.get_available_seletion_modes():
         return
     print_with_time("Persisting weights...")
     time_count = ExecutionTimeCounter().start()
-    if SelectionSpecificity.GENERAL in src.history.get_selection_specificities():
+    if SelectorSpecificity.GENERAL in history.get_selection_specificities():
         _persist_general_weights(history, feature_names, best_score_index)
-    if SelectionSpecificity.PER_LABEL in src.history.get_selection_specificities():
+    if SelectorSpecificity.PER_LABEL in history.get_selection_specificities():
         _persist_per_label_weights(history, feature_names, best_score_index)
     time_count.print_end("Weight persistence")
 
 def persist_execution_metrics(execution_times_by_selector: dict[str, List[float]], 
-                              selector_prediction_scores_by_selector: dict[str, List[SelectorPredictionScore]] = {}):
+                              selector_prediction_scores_by_selector: dict[str, List[SelectorPredictionScore]] = {}) -> None:
     # Execution time
     data = []
-    for selector in execution_times_by_src.selector.keys():
-        execution_times = execution_times_by_src.selector.get(selector)
+    for selector in execution_times_by_selector.keys():
+        execution_times = execution_times_by_selector.get(selector)
         data.append([selector, execution_times])
     data.insert(0, ["selector", "time"])
     _write_to_csv_file(data, f'raw-execution-times')
@@ -216,8 +218,8 @@ def persist_execution_metrics(execution_times_by_selector: dict[str, List[float]
     precision_data = []
     recall_data = []
     support_data = []
-    for selector in selector_prediction_scores_by_src.selector.keys():
-        scores = selector_prediction_scores_by_src.selector.get(selector)
+    for selector in selector_prediction_scores_by_selector.keys():
+        scores = selector_prediction_scores_by_selector.get(selector)
         f1_label_data = { }
         precision_label_data = { }
         recall_label_data = { }

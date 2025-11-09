@@ -12,3 +12,9 @@ shap_k: 1000
 shap_representative_k: 1000
 relieff_k: 1000
 lasso_regularization: 0.01
+data_type: "float32"
+label_type: "long"
+batch_size: 32
+epochs: 100
+learning_rate: 0.001
+model: 0

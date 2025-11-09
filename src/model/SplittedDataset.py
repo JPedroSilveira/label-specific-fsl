@@ -1,10 +1,11 @@
+from typing import List
 import numpy as np
 from src.model.Dataset import Dataset
 
 
 class SplittedDataset():
-    def __init__(self, features_train: np.ndarray, features_test:np.ndarray, labels_train: np.ndarray, labels_test: np.ndarray, label_types: list, feature_names: list[str], 
-                 informative_features: list[int], informative_features_per_label: dict[int, list[int]]) -> None:
+    def __init__(self, features_train: np.ndarray, features_test:np.ndarray, labels_train: np.ndarray, labels_test: np.ndarray, label_types: List, feature_names: List[str], 
+                 informative_features: List[int], informative_features_per_label: dict[int, list[int]]) -> None:
         self._train_dataset = Dataset(
             features=features_train, 
             labels=labels_train,

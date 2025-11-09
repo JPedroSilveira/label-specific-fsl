@@ -5,13 +5,12 @@ from torch import nn, Tensor
 
 from config.type import DatasetConfig
 from src.device import device
-from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 from src.model.Dataset import Dataset
 from src.model.ClassifierModel import ClassifierModel
-
-from src.pytorch_helpers.PyTorchFit import pytorch_fit_by_label
-from src.pytorch_helpers.PyTorchPredict import pytorch_predict_propabilities
+from src.domain.pytorch.PyTorchPredict import PyTorchPredict
+from src.domain.pytorch.PyTorchPerLabelFit import PyTorchPerLabelFit
+from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
+from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 
 
 class ListenerFSL(BaseSelectorWeight):
@@ -19,6 +18,7 @@ class ListenerFSL(BaseSelectorWeight):
         super().__init__(n_features, n_labels)
         self._model = ClassifierModel(n_features, n_labels).to(device)
         self._model = ListenerModel(self._model, n_features, n_labels, config.regularization_lambda).to(device)
+        self._config = config
 
     def get_name() -> str:
         return "Listener"
@@ -30,14 +30,14 @@ class ListenerFSL(BaseSelectorWeight):
         return SelectorSpecificity.PER_LABEL
 
     def fit(self, train_dataset: Dataset, test_dataset: Dataset) -> None: 
-        pytorch_fit_by_label(self._model, train_dataset, test_dataset)
+        PyTorchPerLabelFit.execute(self._model, train_dataset, self._config)
 
     def predict(self, dataset: Dataset) -> ndarray:
         y_pred = self.predict_probabilities(dataset)
         return np.argmax(y_pred, 1)
     
     def predict_probabilities(self, dataset: Dataset, use_softmax: bool=True) -> np.ndarray:
-        return pytorch_predict_propabilities(self._model, dataset.get_features(), use_softmax)
+        return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
     
     def get_general_weights(self) -> ndarray:
         return self._model.get_activated_weight().clone().detach().cpu().numpy()[0]

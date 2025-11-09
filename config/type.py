@@ -1,4 +1,4 @@
-from cProfile import label
+from typing import List
 
 
 class ExecutionOutputConfig:
@@ -21,7 +21,7 @@ class DatasetConfig:
     root: str
     filename: str
     label_column: str
-    ignored_columns: list[str]
+    ignored_columns: List[str]
     test_percentage: int
     k_fold: int
     k_fold_repeat: int
@@ -31,6 +31,12 @@ class DatasetConfig:
     shap_representative_k: int
     relieff_k: int
     lasso_regularization: float
+    data_type: str
+    label_type: str
+    batch_size: int
+    epochs: int
+    learning_rate: float
+    model: int
 
 class FeatureConfig:
     informative_prefix: str
@@ -44,7 +50,7 @@ class Config:
     dataset: DatasetConfig
     feature: FeatureConfig
     random_seed: int
-    selectors: list[SelectorConfig]
+    selectors: List[SelectorConfig]
 
     
         

@@ -5,12 +5,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import List
 from tabulate import tabulate
+from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
+from src.model.SelectorSpecificity import SelectorSpecificity
+from src.model.SelectorType import SelectorType
 from src.config.general_config import CREATE_HEATMAP_BASED_ON_INFORMATIVE_FEATURES, FEATURES_TO_DISPLAY_ON_GENERAL_HEATMAP, FEATURES_TO_DISPLAY_PLUS_INFORMATIVE_ON_HEADMAP, INFORMATIVE_FEATURES_STEP_ON_CHART, SHOULD_CALCULATE_METRICS_BY_LABEL, OUTPUT_PATH, INFORMATIVE_FEATURES_OUTPUT_SUB_PATH, MAX_INFORMATIVE_FEATURES_CHART_RANGE
 from src.history.ExecutionHistory import ExecutionHistory
 from src.evaluation.informative_features.InformativeFeaturesScore import InformativeFeaturesScore
-from src.selector.BaseWeightSelectorWrapper import BaseWeightSelectorWrapper
-from src.selector.enum.SelectionMode import SelectionMode
-from src.selector.enum.SelectionSpecificity import SelectionSpecificity
 from src.util.feature_selection_util import get_n_features_from_rank
 from src.util.numpy_util import get_interception_len, normalize
 from src.util.dict_util import add_on_dict_list
@@ -37,39 +37,39 @@ def calculate_informative_features_scores(history: ExecutionHistory, dataset: Da
     limit_range = MAX_INFORMATIVE_FEATURES_CHART_RANGE # dataset.get_n_features() # len(informative_features) * 5
     for selection_size in range(1, limit_range):
         # Calculates using general ranking
-        if SelectionSpecificity.GENERAL in src.history.get_selection_specificities():
+        if SelectorSpecificity.GENERAL in history.get_selection_specificities():
             scores.append(_calculate_informative_features_metrics_general(history, selection_size, informative_features))
         # Calculates using per class ranking when available
-        if SHOULD_CALCULATE_METRICS_BY_LABEL and informative_features_by_label_are_available_on_dataset and SelectionSpecificity.PER_LABEL in src.history.get_selection_specificities():
+        if SHOULD_CALCULATE_METRICS_BY_LABEL and informative_features_by_label_are_available_on_dataset and SelectorSpecificity.PER_LABEL in history.get_selection_specificities():
             scores.extend(_calculate_informative_features_metrics_per_class(history, selection_size, informative_features_by_label))
     time_counter.print_end("Informative feature selection scores calculated for selector")
     # Returns the list of scores
     return scores
 
-def create_informative_features_scores_output(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]):
+def create_informative_features_scores_output(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]) -> None:
     _create_informative_features_chart_output_by_selector(informative_scores_by_selector)
     _create_informative_features_chart_output_by_label(informative_scores_by_selector)
     _create_informative_features_table_output(informative_scores_by_selector)
 
-def create_heatmap(selector: BaseWeightSelectorWrapper, dataset: Dataset):
-    if src.selector.get_selection_mode() == SelectionMode.WEIGHT:
+def create_heatmap(selector: BaseSelectorWeight, dataset: Dataset) -> None:
+    if selector.get_selection_mode() == SelectorType.WEIGHT:
         knows_informative_features = len(dataset.get_informative_features()) > 0
         if CREATE_HEATMAP_BASED_ON_INFORMATIVE_FEATURES and knows_informative_features:
             heatmap = _get_heatmap_based_on_informative_features(selector, dataset)
-            _persist_heatmap(heatmap, src.selector.get_class_name())
+            _persist_heatmap(heatmap, selector.get_class_name())
         else:
-            if SelectionSpecificity.GENERAL in src.selector.get_selection_specificities():
-                ranking = src.selector.get_general_ranking()
+            if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
+                ranking = selector.get_general_ranking()
                 heatmap = _get_heatmap_based_on_feature_importance_ranking(ranking, selector, dataset)
-                _persist_heatmap(heatmap, f'{src.selector.get_class_name()} - General')
-            if SelectionSpecificity.PER_LABEL in src.selector.get_selection_specificities():
-                ranking_per_class = src.selector.get_ranking_per_class()
+                _persist_heatmap(heatmap, f'{selector.get_class_name()} - General')
+            if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities():
+                ranking_per_class = selector.get_ranking_per_class()
                 for label in range(0, dataset.get_n_labels()):
                     ranking = ranking_per_class[label]
                     heatmap = _get_heatmap_based_on_feature_importance_ranking(ranking, selector, dataset)
-                    _persist_heatmap(heatmap, f'{src.selector.get_class_name()} - Label {label}')
+                    _persist_heatmap(heatmap, f'{selector.get_class_name()} - Label {label}')
             
-def _persist_heatmap(heatmap, title: str):
+def _persist_heatmap(heatmap, title: str) -> None:
     fig_size = (heatmap.shape[1] * 2.5, heatmap.shape[0] * 0.5)
     plt.figure(figsize=fig_size)
     sns.heatmap(heatmap, annot=True, fmt=".3f", annot_kws={"fontsize":16})
@@ -78,10 +78,10 @@ def _persist_heatmap(heatmap, title: str):
     plt.savefig(f'{OUTPUT_PATH}/{INFORMATIVE_FEATURES_OUTPUT_SUB_PATH}/heatmap-{title}.pdf', dpi=200, format='pdf', bbox_inches='tight')
     plt.close()
 
-def _get_heatmap_based_on_informative_features(selector: BaseWeightSelectorWrapper, dataset: Dataset):
-    weights_per_class = src.selector.get_weights_per_class() if SelectionSpecificity.PER_LABEL in src.selector.get_selection_specificities() else []
-    if SelectionSpecificity.GENERAL in src.selector.get_selection_specificities():
-        weights_general = src.selector.get_general_weights()
+def _get_heatmap_based_on_informative_features(selector: BaseSelectorWeight, dataset: Dataset) -> pd.DataFrame:
+    weights_per_class = selector.get_weights_per_class() if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
+    if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
+        weights_general = selector.get_general_weights()
         weights_per_class.append(weights_general)
     weights_per_class = np.array(weights_per_class)
     headmap = []
@@ -91,15 +91,15 @@ def _get_heatmap_based_on_informative_features(selector: BaseWeightSelectorWrapp
     for current_feature in range(0, features_limit):
         weights = weights_per_class[:, current_feature]
         headmap.append(weights)
-    columns = list(range(0, dataset.get_n_labels())) if SelectionSpecificity.PER_LABEL in src.selector.get_selection_specificities() else []
-    if SelectionSpecificity.GENERAL in src.selector.get_selection_specificities():
+    columns = list(range(0, dataset.get_n_labels())) if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
+    if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
         columns.append('general')
     return pd.DataFrame(headmap, columns=columns, index=dataset.get_feature_names()[0:features_limit])
 
-def _get_heatmap_based_on_feature_importance_ranking(ranking: List[int], selector: BaseWeightSelectorWrapper, dataset: Dataset):
-    weights_per_class = src.selector.get_weights_per_class() if SelectionSpecificity.PER_LABEL in src.selector.get_selection_specificities() else []
-    if SelectionSpecificity.GENERAL in src.selector.get_selection_specificities():
-        weights_general = src.selector.get_general_weights()
+def _get_heatmap_based_on_feature_importance_ranking(ranking: List[int], selector: BaseSelectorWeight, dataset: Dataset) -> pd.DataFrame:
+    weights_per_class = selector.get_weights_per_class() if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
+    if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
+        weights_general = selector.get_general_weights()
         weights_per_class.append(weights_general)
     weights_per_class = np.array(weights_per_class)
     headmap = []
@@ -111,18 +111,18 @@ def _get_heatmap_based_on_feature_importance_ranking(ranking: List[int], selecto
         weights = weights_per_class[:, feature]
         headmap.append(weights)
         headmap_index.append(dataset.get_feature_names()[feature])
-    columns = list(range(0, dataset.get_n_labels())) if SelectionSpecificity.PER_LABEL in src.selector.get_selection_specificities() else []
-    if SelectionSpecificity.GENERAL in src.selector.get_selection_specificities():
+    columns = list(range(0, dataset.get_n_labels())) if SelectionSpecificity.PER_LABEL in selector.get_selection_specificities() else []
+    if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
         columns.append('general')
     return pd.DataFrame(headmap, columns=columns, index=headmap_index)
 
-def _create_informative_features_chart_output_by_selector(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]):
+def _create_informative_features_chart_output_by_selector(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]) -> None:
     '''
     Persist a chart per label using the previously calculated informative features percentages
     '''
     time_counter = ExecutionTimeCounter().print_start("Persisting informative features chart by src.selector...")
     informative_scores_by_selector_and_label: dict[str, List[InformativeFeaturesScore]] = {}
-    for selector in informative_scores_by_src.selector.keys():
+    for selector in informative_scores_by_selector.keys():
         scores = informative_scores_by_selector[selector]
         for score in scores:
             add_on_dict_list(informative_scores_by_selector_and_label, f'{selector}-{score.get_label()}', score)
@@ -145,7 +145,7 @@ def _create_informative_features_chart_output_by_selector(informative_scores_by_
 
     time_counter.print_end("Informative feature selection scores persisted")
 
-def _create_informative_features_chart_output_by_label(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]):
+def _create_informative_features_chart_output_by_label(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]) -> None:
     '''
     Persist a chart per label using the previously calculated informative features percentages
     '''
@@ -205,15 +205,15 @@ def _create_informative_features_table_output(informative_scores_by_selector: di
             csvwriter.writerows(data[1:])
     time_counter.print_end("Informative feature selection scores persisted")
 
-def _get_informative_features_by_label(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]):
+def _get_informative_features_by_label(informative_scores_by_selector: dict[str, List[InformativeFeaturesScore]]) -> dict[str, List[InformativeFeaturesScore]]:
     informative_scores_by_label: dict[str, List[InformativeFeaturesScore]] = {}
-    for selector in informative_scores_by_src.selector.keys():
+    for selector in informative_scores_by_selector.keys():
         scores = informative_scores_by_selector[selector]
         for score in scores:
             add_on_dict_list(informative_scores_by_label, score.get_label(), score)
     return informative_scores_by_label
 
-def _persist_to_file(data: dict[str, list], title: str, column: str = "Algorithm"):
+def _persist_to_file(data: dict[str, list], title: str, column: str = "Algorithm") -> None:
     '''
     Persist the data as a chart into a file
     '''
@@ -241,41 +241,41 @@ def _persist_to_file(data: dict[str, list], title: str, column: str = "Algorithm
     # Reset plt
     plt.close()
 
-def _calculate_informative_features_metrics_general(history: ExecutionHistory, selection_size: int, informative_features: list[int]) -> InformativeFeaturesScore:
+def _calculate_informative_features_metrics_general(history: ExecutionHistory, selection_size: int, informative_features: List[int]) -> InformativeFeaturesScore:
     '''
     Calculates the amount of informative features that were selected without considering the labels
     '''
     total_amount_of_informative_features = 0
-    for item in src.history.get_items():
+    for item in history.get_items():
         rank = get_n_features_from_rank(item.get_general_ranking(), selection_size)
         total_amount_of_informative_features += get_interception_len(rank, informative_features)
-    average_of_informative_features = total_amount_of_informative_features / len(src.history.get_items())
+    average_of_informative_features = total_amount_of_informative_features / len(history.get_items())
     return InformativeFeaturesScore(
-        selector_name=src.history.get_selector_name(),
+        selector_name=history.get_selector_name(),
         selection_size=selection_size,
         percentage_of_informative_features_selected=average_of_informative_features / len(informative_features),
         percentage_of_selected_features_that_are_informative=average_of_informative_features / selection_size
     )
 
-def _calculate_informative_features_metrics_per_class(history: ExecutionHistory, selection_size: int, informative_features_by_label: dict[int, list[int]]) -> list[InformativeFeaturesScore]:
+def _calculate_informative_features_metrics_per_class(history: ExecutionHistory, selection_size: int, informative_features_by_label: dict[int, List[int]]) -> List[InformativeFeaturesScore]:
     '''
     Calculates the amount of informative features that were selected for each label
     '''
     scores = []
     informative_features_amount_by_label = {}
-    for label in range(0, src.history.get_n_labels()):
+    for label in range(0, history.get_n_labels()):
         informative_features_amount_by_label[label] = 0
-    for item in src.history.get_items():
+    for item in history.get_items():
         rank_per_class = item.get_rank_per_class()
         for label, rank in enumerate(rank_per_class):
             informative_features = informative_features_by_label[label]
             rank = get_n_features_from_rank(rank, selection_size)
             informative_features_amount_by_label[label] += get_interception_len(rank, informative_features)
-    for label in range(0, src.history.get_n_labels()):
+    for label in range(0, history.get_n_labels()):
         informative_features = informative_features_by_label[label]
-        average = informative_features_amount_by_label[label] / len(src.history.get_items())
+        average = informative_features_amount_by_label[label] / len(history.get_items())
         score = InformativeFeaturesScore(
-            selector_name=src.history.get_selector_name(),
+            selector_name=history.get_selector_name(),
             selection_size=selection_size,
             percentage_of_informative_features_selected=average / len(informative_features),
             percentage_of_selected_features_that_are_informative=average / selection_size,

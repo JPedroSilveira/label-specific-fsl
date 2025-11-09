@@ -3,14 +3,14 @@ import lime.lime_tabular
 import numpy as np
 
 from config.type import DatasetConfig
+from src.domain.pytorch.PyTorchPredict import PyTorchPredict
+from src.domain.pytorch.PyTorchFit import PyTorchFit
 from src.device import device
 from src.model.Dataset import Dataset
 from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
 from src.model.ClassifierModel import ClassifierModel
 
-from src.pytorch_helpers.PyTorchFit import pytorch_fit
-from src.pytorch_helpers.PyTorchPredict import pytorch_predict_propabilities
 from src.domain.data.DatasetsCreator import get_train_and_test_data_from_dataset
 
 
@@ -21,6 +21,7 @@ class LIME(BaseSelectorWeight):
         self._n_features = n_features
         self._n_labels = n_labels
         self._k = config.lime_k
+        self._config = config
 
     def get_name() -> str:
         return "LIME"
@@ -32,7 +33,7 @@ class LIME(BaseSelectorWeight):
         return SelectorSpecificity.PER_LABEL
 
     def fit(self, train_dataset: Dataset, test_dataset: Dataset) -> None: 
-        pytorch_fit(self._model, train_dataset)
+        PyTorchFit.execute(self._model, train_dataset, self._config)
         self._fit_selector(train_dataset, test_dataset)
 
     def _fit_selector(self, train_dataset: Dataset, test_dataset: Dataset) -> None:
@@ -78,14 +79,14 @@ class LIME(BaseSelectorWeight):
         self._feature_importance = np.array(feature_importance_by_label)
 
     def lime_predict(self, x) -> np.ndarray:
-        return pytorch_predict_propabilities(self._model, x)
+        return PyTorchPredict.execute(self._model, x)
     
     def predict(self, dataset: Dataset) -> np.ndarray:
         y_pred = self.predict_probabilities(dataset)
         return np.argmax(y_pred, 1)
     
     def predict_probabilities(self, dataset: Dataset, use_softmax: bool=True) -> np.ndarray:
-        return pytorch_predict_propabilities(self._model, dataset.get_features(), use_softmax)
+        return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
  
     def get_general_weights(self) -> np.ndarray:
         return np.max(self.get_weights_per_class(), axis=0)

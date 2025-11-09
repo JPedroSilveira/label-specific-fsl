@@ -22,7 +22,7 @@ class BasePredictionScoreStatistics():
         self.f1_score_var = None
         self.support_avg = None
         self.support_var = None
-        self.by_label: list[PredictionScoreAverageByLabel] = []
+        self.by_label: List[PredictionScoreAverageByLabel] = []
         self.selector_name = None
 
 class SelectorPredictionScoreStatistics(BasePredictionScoreStatistics):

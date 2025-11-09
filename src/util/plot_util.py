@@ -1,3 +1,4 @@
+from typing import List
 import imageio
 import uuid
 from matplotlib.figure import Figure
@@ -6,7 +7,7 @@ from src.config.general_config import TEMP_OUTPUT_PATH
 from src.util.performance_util import ExecutionTimeCounter
 
 
-def save_plots_as_video(file_name: str, plot_list: list[Figure], fps=1):
+def save_plots_as_video(file_name: str, plot_list: List[Figure], fps=1):
     """
     Saves a list of Matplotlib plots as a video.
     """

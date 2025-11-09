@@ -29,7 +29,6 @@ from src.evaluation.prediction.Prediction import calculate_prediction_score_from
 from src.evaluation.prediction.PredictionAverage import SelectorPredictionScoreStatistics, PredictorPredictionScoreStatistics
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 from src.evaluation.occlusion.Occlusion import calculate_and_persist_occlusion, persist_merged_occlusion
-from src.selector.enum.PredictionMode import PredictionMode
 
 
 @hydra.main(version_base=None, config_path="config", config_name="config")

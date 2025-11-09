@@ -1,10 +1,11 @@
+from typing import List
 import numpy as np
 from scipy.sparse.tests.test_base import spmatrix
 from sklearn import preprocessing
 
 
 class Dataset():
-    def __init__(self, features: np.ndarray, labels: np.ndarray, label_types: list, feature_names: list[str], informative_features: list[int], informative_features_per_label: dict[int, list[int]]) -> None:
+    def __init__(self, features: np.ndarray, labels: np.ndarray, label_types: List[int], feature_names: List[str], informative_features: List[int], informative_features_per_label: dict[int, list[int]]) -> None:
         self._features = features
         self._labels = labels
         self._label_types = label_types

@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from src.model.Dataset import Dataset
 from sklearn.metrics import classification_report
@@ -20,14 +21,14 @@ class ClassificationScoreLabelReport:
         self.support = support
 
 class ClassificationScoreReport():
-    def __init__(self, general: ClassificationScoreGeneralReport, per_label: list[ClassificationScoreLabelReport]) -> None:
+    def __init__(self, general: ClassificationScoreGeneralReport, per_label: List[ClassificationScoreLabelReport]) -> None:
         self.general = general
         self.per_label = per_label
 
 def calculate_classification_report(dataset: Dataset, y_pred: np.ndarray):
     y_true = dataset.get_labels()
     report = classification_report(y_true, y_pred, output_dict=True, zero_division=0.0)
-    labels_score: list[ClassificationScoreLabelReport] = []
+    labels_score: List[ClassificationScoreLabelReport] = []
 
     accuracy = report['accuracy']
     weighted_avg_scores = report['weighted avg']
