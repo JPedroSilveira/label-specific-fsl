@@ -69,16 +69,6 @@ def execute_experiment(config: Config) -> None:
     
     return
 
-    # Define selector
-    #selectors_types = [MFSLayerV1ReLUSelector, FeatureSelectionLayerSelectorWrapper, FeatureSelectionObserverSelectorWrapper, RFSLayerSelectorV1Wrapper, FSRLayerV1ReLUSelector]
-    #selectors_types = [MFSLayerV1ReLUSelector, LassoSelectorWrapper, DecisionTreeSelectorWrapper, RandomForestSelectorWrapper, LIMESelectorWrapper, DeepSHAPSelectorWrapper, KruskalWallisSelectorWrapper, ReliefFSelectorWrapper]
-    selectors_types = [MFSLayerV1ReLUSelector, LassoSelectorWrapper, LIMESelectorWrapper, DeepSHAPSelectorWrapper]
-
-    # Validate unique names between selectors
-    names = [selector_type.get_name() for selector_type in selectors_types]
-    if len(names) > len(set(names)):
-        raise ValueError("Selectors name aren't unique")
-
     # Initialize metrics dictionaries per selector
     execution_times_by_selector: dict[str, List[float]] = {}
     selector_prediction_score_average_by_selector: dict[str, SelectorPredictionScoreStatistics] = {}
