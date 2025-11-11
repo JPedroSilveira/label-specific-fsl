@@ -6,9 +6,9 @@ from torch import nn
 from tqdm import tqdm
 
 from config.type import DatasetConfig
-from src.device import device
+from src.domain.device.DeviceGetter import DeviceGetter
 from src.domain.pytorch.PyTorchDataLoaderCreator import PyTorchDataLoaderCreator
-from src.model.Dataset import Dataset
+from src.domain.data.types.Dataset import Dataset
 
 from sklearn.utils.class_weight import compute_class_weight
 
@@ -33,7 +33,7 @@ class PyTorchFit:
         train_data_loader = PyTorchDataLoaderCreator.execute(train_features, train_labels, config)
         # Info variables
         reg = 0.0
-        loss = None
+        loss_without_reg = 0.0
         # Create an outer loop progress bar for epochs
         epoch_iterator = tqdm(range(config.epochs), desc="Epoch Progress")
         # Train        
@@ -48,6 +48,7 @@ class PyTorchFit:
                 y_prediction = model(X)
                 # Computeh Loss
                 loss = criterion(y_prediction, y)
+                loss_without_reg = loss.item()
                 if enable_regularization:
                     reg = model.get_regularization()
                     loss += reg
@@ -60,7 +61,7 @@ class PyTorchFit:
                 if enable_after_forward:
                     model.after_forward()
             epoch_iterator.set_postfix(
-                epoch_loss=f"{loss.item():.8f}", 
+                epoch_loss=f"{loss_without_reg:.8f}", 
                 reg=f"{reg:.8f}"
             )
         epoch_iterator.close()
@@ -71,7 +72,7 @@ class PyTorchFit:
         labels = np.unique(y)
         # Compute label weight
         label_weights=compute_class_weight(class_weight="balanced", classes=labels, y=y)
-        label_weights=torch.tensor(label_weights, dtype=torch.float).to(device)
+        label_weights=torch.tensor(label_weights, dtype=torch.float).to(DeviceGetter.execute())
         # Define loss criterion
         cross_entropy_loss = nn.CrossEntropyLoss(weight=label_weights)
         # One hot encoder

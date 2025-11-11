@@ -1,7 +1,8 @@
-from typing import List
 import numpy as np
-from src.model.Dataset import Dataset
+from typing import List
 from sklearn.metrics import classification_report
+
+from src.domain.data.types.Dataset import Dataset
 
 
 class ClassificationScoreGeneralReport:
@@ -20,7 +21,7 @@ class ClassificationScoreLabelReport:
         self.f1_score = f1_score
         self.support = support
 
-class ClassificationScoreReport():
+class ClassificationScoreReport:
     def __init__(self, general: ClassificationScoreGeneralReport, per_label: List[ClassificationScoreLabelReport]) -> None:
         self.general = general
         self.per_label = per_label

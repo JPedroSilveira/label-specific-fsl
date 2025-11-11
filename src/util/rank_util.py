@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.model.SelectorType import SelectorType
+from src.domain.selector.types.enum.SelectorType import SelectorType
 
 from src.history.ExecutionHistory import ExecutionHistory
 from src.util.array_util import get_most_common_element

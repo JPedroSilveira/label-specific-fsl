@@ -1,9 +1,12 @@
+from typing import List, Type
+
 from config.type import Config
+from src.domain.selector.types.base.BaseSelector import BaseSelector
 
 
 class SelectorTypeCreator():
     @staticmethod
-    def execute(config: Config) -> list:
+    def execute(config: Config) -> List[Type[BaseSelector]]:
         selectors = set([selector.model for selector in config.selectors])
         selectors_class = []
         for selector in selectors:

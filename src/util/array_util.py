@@ -1,38 +1,3 @@
-import numpy as np
-
-
-def get_weight_per_class_from_shap(shap_values):
-    """
-    Given a array of shap values in the following format where F represents the number of features and C the number of classes
-
-    [
-        [0 ... C] 0 
-        [0 ... C] 1
-        ...
-        [0 ... C] F
-    ]
-
-    Returns a new array on the format:
-
-    [
-        [0 ... F] 0
-        ...
-        [0 ... F] C
-    ]
-    """
-    print(shap_values.shape)
-    n_labels = len(shap_values[0])
-    transpose = []
-    for i in range(0, n_labels):
-        transpose.append([])
-    for feature_per_class in shap_values:
-        for i in range(0, n_labels):
-            transpose[i].append(feature_per_class[i])
-    for i in range(0, n_labels):
-        transpose[i] = np.array(transpose[i], dtype=np.float64)
-    return transpose
-
-
 def get_most_common_element(lst):
     if not lst:
         raise ValueError("List cannot be empty.")

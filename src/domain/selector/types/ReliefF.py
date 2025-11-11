@@ -4,12 +4,12 @@ from sklearn.neighbors import NearestNeighbors
 from config.type import DatasetConfig
 from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-from src.model.Dataset import Dataset
+from src.domain.data.types.Dataset import Dataset
 
 
 class ReliefF(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
-        super().__init__(n_features, n_labels)
+        super().__init__(n_features, n_labels, config)
         self._weights = None
         self._n_neighbors = config.relieff_k
 

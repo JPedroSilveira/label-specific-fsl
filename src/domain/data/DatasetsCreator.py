@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 from config.type import Config
-from src.model.Dataset import Dataset
-from src.model.SplittedDataset import SplittedDataset
+from src.domain.data.types.Dataset import Dataset
+from src.domain.data.types.SplittedDataset import SplittedDataset
 from src.config.general_config import K_FOLD, K_FOLD_REPEAT, RANDOM_STATE
 from src.util.string_util import extract_numbers
 

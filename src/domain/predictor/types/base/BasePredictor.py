@@ -8,7 +8,7 @@ class BasePredictor():
         pass
 
     def get_name() -> str:
-        raise NotImplemented("")
+        raise NotImplementedError()
     
     def get_class_name(self) -> str:
         return self.__class__.get_name()
@@ -17,7 +17,7 @@ class BasePredictor():
         return False
      
     def fit(self, X: np.ndarray, y: np.ndarray) -> None:
-        raise NotImplemented("")
+        raise NotImplementedError()
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        raise NotImplemented("")
+        raise NotImplementedError()

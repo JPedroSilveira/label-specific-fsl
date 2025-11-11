@@ -11,6 +11,7 @@ class ExecutionOutputConfig:
     execution_time: str
     informative_features: str
     raw_selection: str
+    log_file: str
 
 class OutputConfig:
     root: str
@@ -37,6 +38,9 @@ class DatasetConfig:
     epochs: int
     learning_rate: float
     model: int
+    scale: bool
+    normalize: bool
+    jaccard_k: int
 
 class FeatureConfig:
     informative_prefix: str
@@ -44,6 +48,9 @@ class FeatureConfig:
     
 class SelectorConfig:
     model: str
+    
+class StabilityConfig:
+    metric: str
 
 class Config:
     output: OutputConfig
@@ -51,6 +58,7 @@ class Config:
     feature: FeatureConfig
     random_seed: int
     selectors: List[SelectorConfig]
+    stability: List[StabilityConfig]
 
     
         

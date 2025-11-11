@@ -4,7 +4,7 @@ from torch import nn
 from tqdm import tqdm
 
 from config.type import DatasetConfig
-from src.device import device
+from src.domain.device.DeviceGetter import DeviceGetter
 from src.domain.pytorch.PyTorchDataLoaderCreator import PyTorchDataLoaderCreator
 
 from sklearn.utils.class_weight import compute_class_weight
@@ -49,7 +49,7 @@ class PyTorchSimpleFit:
         labels = np.unique(y)
         # Compute label weight
         label_weights=compute_class_weight(class_weight="balanced", classes=labels, y=y)
-        label_weights=torch.tensor(label_weights, dtype=torch.float).to(device)
+        label_weights=torch.tensor(label_weights, dtype=torch.float).to(DeviceGetter.execute())
         # Define loss criterion
         cross_entropy_loss = nn.CrossEntropyLoss(weight=label_weights)
         # One hot encoder

@@ -4,15 +4,15 @@ from scipy import stats
 from sklearn.feature_selection import SelectKBest
 
 from config.type import DatasetConfig
-from src.model.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-from src.model.Dataset import Dataset
+from src.domain.data.types.Dataset import Dataset
 
 
 
 class KruskalWallis(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
-        super().__init__(n_features, n_labels)
+        super().__init__(n_features, n_labels, config)
         self.model = SelectKBest(score_func=self._kruskal_wallis, k='all')
 
     def get_name() -> str:
@@ -27,10 +27,10 @@ class KruskalWallis(BaseSelectorWeight):
     def fit(self, train_dataset: Dataset, _: Dataset) -> None: 
         X = train_dataset.get_features()
         y = train_dataset.get_labels()
-        self.src.model.fit(X, y)
+        self.model.fit(X, y)
     
     def get_general_weights(self) -> np.ndarray:
-        return self.src.model.scores_
+        return self.model.scores_
     
     def _single_feature_kruskal_wallis(self, X, y) -> Any:
         return stats.kruskal(*[X[y == c] for c in np.unique(y)])

@@ -8,7 +8,7 @@ class OcclusionScore:
         self.loss = loss
         self.loss_by_label = loss_by_label
         self.removed_features = removed_features
-        self.selector_name = selector.get_class_name()
+        self.selector_name = selector.get_selector_name()
         self.inverse_report: ClassificationScoreReport = inverse_report
 
     def __str__(self) -> str:

@@ -1,6 +1,7 @@
-from typing import List
 import numpy as np
-from src.model.Dataset import Dataset
+from typing import List
+
+from src.domain.data.types.Dataset import Dataset
 
 
 class SplittedDataset():

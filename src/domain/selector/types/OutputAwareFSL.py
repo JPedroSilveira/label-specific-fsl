@@ -3,22 +3,21 @@ import numpy as np
 from torch import Tensor, nn
 
 from config.type import DatasetConfig
+from domain.pytorch.OneHotEncoder import OneHotEncoder
+from src.domain.device.DeviceGetter import DeviceGetter
 from src.domain.pytorch.PyTorchFit import PyTorchFit
 from src.domain.pytorch.PyTorchPredict import PyTorchPredict
-from src.model.Dataset import Dataset
-from src.device import device
-from src.model.ClassifierModel import ClassifierModel
+from src.domain.data.types.Dataset import Dataset
+from src.domain.model.ClassifierModel import ClassifierModel
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
 from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 
-from src.util.torch_util import one_hot_encode
     
 class OutputAwareFSL(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
-        super().__init__(n_features, n_labels)
-        self._model = ClassifierModel(n_features, n_labels).to(device)
-        self._model = OutputAwareFSLModel(self._model, n_features, n_labels, config.regularization_lambda).to(device)
-        self._config = config
+        super().__init__(n_features, n_labels, config)
+        self._model = ClassifierModel(n_features, n_labels, config).to(DeviceGetter.execute())
+        self._model = OutputAwareFSLModel(self._model, n_features, n_labels, config).to(DeviceGetter.execute())
 
     def get_name() -> str:
         return "Output Aware"
@@ -40,24 +39,25 @@ class OutputAwareFSL(BaseSelectorWeight):
         return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
     
     def get_general_weights(self) -> np.ndarray:
-        return np.sum(self.get_weights_per_class(), axis=0)
+        return np.sum(self.get_per_label_weights(), axis=0)
     
-    def get_weights_per_class(self) -> np.ndarray:
-        w = self._src.model.get_activated_weight()
+    def get_per_label_weights(self) -> np.ndarray:
+        w = self._model.get_activated_weight()
         result = []
         for i in range(0, self.get_n_labels()):
             result.append(w[i].clone().detach().cpu().numpy())
         return result
     
 class OutputAwareFSLModel(nn.Module):
-    def __init__(self, model: nn.Module, n_features: int, n_labels: int, regularization: float) -> None:
+    def __init__(self, model: nn.Module, n_features: int, n_labels: int, config: DatasetConfig) -> None:
         super().__init__()
-        self._weights = nn.Parameter(self.generate_initial_weights(n_features, n_labels).to(device))
+        self._weights = nn.Parameter(self.generate_initial_weights(n_features, n_labels).to(DeviceGetter.execute()))
         self._activation = nn.ReLU()
-        self._model = model.to(device)
+        self._model = model.to(DeviceGetter.execute())
         self._n_labels = n_labels
         self._n_features = n_features
-        self._regularization = regularization
+        self._regularization = config.regularization_lambda
+        self._config = config
 
     def forward(self, x) -> Tensor:
         w = self._activation(self._weights)
@@ -68,7 +68,7 @@ class OutputAwareFSLModel(nn.Module):
         return self._model(x)
     
     def before_forward(self, y, label_types) -> None:
-        self._y = one_hot_encode(y, label_types)
+        self._y = OneHotEncoder.execute(y, label_types, self._config)
 
     def get_regularization(self) -> Tensor:
         return self._regularization * torch.sum(torch.abs(self.get_weight()))
@@ -80,4 +80,4 @@ class OutputAwareFSLModel(nn.Module):
         return self._activation(self.get_weight())
     
     def generate_initial_weights(self, n_features: int, n_labels: int) -> Tensor:
-        return torch.ones(n_features, n_labels)
+        return torch.ones(n_labels, n_features)

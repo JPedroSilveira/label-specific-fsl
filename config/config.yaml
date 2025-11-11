@@ -2,6 +2,7 @@ defaults:
     - _self_
     - dataset: xor
     - selectors: default
+    - stability: default
 random_seed: 42
 feature:
     informative_prefix: "informative_"
@@ -19,3 +20,4 @@ output:
         execution_time: "execution_time"
         informative_features: "informative_features"
         raw_selection: "raw_selection"
+        log_file: "log.txt"

@@ -9,14 +9,14 @@ from matplotlib.figure import Figure
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.utils.class_weight import compute_class_weight
 
-from src.model.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelector import BaseSelector
+from src.domain.data.types.Dataset import Dataset
 
 from src.util.device_util import get_device
 from src.util.dict_util import add_on_dict_list
 
 from src.config.general_config import OCCLUSION_INITIAL_END, OCCLUSION_STEP, SHOULD_CALCULATE_METRICS_BY_LABEL, OCCLUSION_BY_LOSS, OCCLUSION_LIMIT, OCCLUSION_INITIAL_STEP, OUTPUT_PATH, OCCLUSION_OUTPUT_SUB_PATH, SHOULD_SAVE_OCCLUSION_VIDEO, OCCLUSION_STEP_ON_CHART
-from src.model.Dataset import Dataset
 from src.evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
 from src.util.feature_selection_util import remove_n_features_from_inversed_rank, remove_n_features_from_rank
 from src.util.classification_report_util import calculate_classification_report
@@ -254,7 +254,7 @@ def _calculate_occlusion_general(selector: BaseSelector, dataset: Dataset):
     # Persist the confusions matrix list as a video
     if SHOULD_SAVE_OCCLUSION_VIDEO:
         save_plots_as_video(
-            file_name=f'{OUTPUT_PATH}/{OCCLUSION_OUTPUT_SUB_PATH}/{selector.get_class_name()}-general-confusion-matrix.gif',
+            file_name=f'{OUTPUT_PATH}/{OCCLUSION_OUTPUT_SUB_PATH}/{selector.get_selector_name()}-general-confusion-matrix.gif',
             plot_list=confusion_matrix_list
         )
     return scores
@@ -283,7 +283,7 @@ def _calculate_occlusion_per_label(selector: BaseSelector, dataset: Dataset):
         # Persist the confusions matrix list as a video
         if SHOULD_SAVE_OCCLUSION_VIDEO:
             save_plots_as_video(
-                file_name=f'{OUTPUT_PATH}/{OCCLUSION_OUTPUT_SUB_PATH}/{selector.get_class_name()}-per-label-{label}-confusion-matrix.gif',
+                file_name=f'{OUTPUT_PATH}/{OCCLUSION_OUTPUT_SUB_PATH}/{selector.get_selector_name()}-per-label-{label}-confusion-matrix.gif',
                 plot_list=confusion_matrix_list
             )
     return scores_per_label
@@ -328,7 +328,7 @@ def _persist_general_occlusion_metrics_as_a_chart(selector: BaseSelector, scores
         data['Label'].append('General')
         data['Removed Features'].append(score.removed_features)
         data['Score'].append(score.report.general.f1_score)
-    _persist_occlusion_chart(data, f'{selector.get_class_name()} - Label General - Occlusion', column='Label')
+    _persist_occlusion_chart(data, f'{selector.get_selector_name()} - Label General - Occlusion', column='Label')
     data = {
         'Label': [],
         'Removed Features': [],
@@ -338,7 +338,7 @@ def _persist_general_occlusion_metrics_as_a_chart(selector: BaseSelector, scores
         data['Label'].append('General')
         data['Removed Features'].append(score.removed_features)
         data['Score'].append(score.loss)
-    _persist_occlusion_chart(data, f'{selector.get_class_name()} - Label General - Occlusion - By Loss', column='Label', isLoss=True)
+    _persist_occlusion_chart(data, f'{selector.get_selector_name()} - Label General - Occlusion - By Loss', column='Label', isLoss=True)
     data = {
         'Label': [],
         'Removed Features': [],
@@ -348,7 +348,7 @@ def _persist_general_occlusion_metrics_as_a_chart(selector: BaseSelector, scores
         data['Label'].append('General')
         data['Removed Features'].append(score.removed_features)
         data['Score'].append(score.inverse_report.general.f1_score) 
-    _persist_occlusion_chart(data, f'{selector.get_class_name()} - Label General - Occlusion - Inversed', column='Label')
+    _persist_occlusion_chart(data, f'{selector.get_selector_name()} - Label General - Occlusion - Inversed', column='Label')
 
 def _persist_per_label_occlusion_metrics_as_a_chart(selector: BaseSelector, scores_per_label: List[list[OcclusionScorePerLabel]]):
     '''
@@ -365,7 +365,7 @@ def _persist_per_label_occlusion_metrics_as_a_chart(selector: BaseSelector, scor
                 data['Label'].append(f'Label {label_score.label}')
                 data['Removed Features'].append(score.removed_features)
                 data['Score'].append(label_score.f1_score)
-        _persist_occlusion_chart(data, f'{selector.get_class_name()}-label-{label}-occlusion', column='Label')
+        _persist_occlusion_chart(data, f'{selector.get_selector_name()}-label-{label}-occlusion', column='Label')
         if OCCLUSION_BY_LOSS:
             data = {
                 'Label': [],
@@ -377,7 +377,7 @@ def _persist_per_label_occlusion_metrics_as_a_chart(selector: BaseSelector, scor
                     data['Label'].append(f'Label {label_score.label}')
                     data['Removed Features'].append(score.removed_features)
                     data['Score'].append(score.loss_by_label[label_score.label])
-            _persist_occlusion_chart(data, f'{selector.get_class_name()}-label-{label}-occlusion-by-loss', column='Label', isLoss=True)
+            _persist_occlusion_chart(data, f'{selector.get_selector_name()}-label-{label}-occlusion-by-loss', column='Label', isLoss=True)
         data = {
             'Label': [],
             'Removed Features': [],
@@ -388,7 +388,7 @@ def _persist_per_label_occlusion_metrics_as_a_chart(selector: BaseSelector, scor
                 data['Label'].append(f'Label {label_score.label}')
                 data['Removed Features'].append(score.removed_features)
                 data['Score'].append(label_score.f1_score)
-        _persist_occlusion_chart(data, f'{selector.get_class_name()}-label-{label}-occlusion-inversed', column='Label')
+        _persist_occlusion_chart(data, f'{selector.get_selector_name()}-label-{label}-occlusion-inversed', column='Label')
         
 
 def _persist_occlusion_metrics_as_a_chart(selector: BaseSelector, scores: List[OcclusionScore], scores_per_class: List[List[OcclusionScorePerLabel]]):

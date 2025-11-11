@@ -5,16 +5,17 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import List
 from tabulate import tabulate
+
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-from src.model.SelectorSpecificity import SelectorSpecificity
-from src.model.SelectorType import SelectorType
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorType import SelectorType
+from src.domain.data.types.Dataset import Dataset
 from src.config.general_config import CREATE_HEATMAP_BASED_ON_INFORMATIVE_FEATURES, FEATURES_TO_DISPLAY_ON_GENERAL_HEATMAP, FEATURES_TO_DISPLAY_PLUS_INFORMATIVE_ON_HEADMAP, INFORMATIVE_FEATURES_STEP_ON_CHART, SHOULD_CALCULATE_METRICS_BY_LABEL, OUTPUT_PATH, INFORMATIVE_FEATURES_OUTPUT_SUB_PATH, MAX_INFORMATIVE_FEATURES_CHART_RANGE
 from src.history.ExecutionHistory import ExecutionHistory
 from src.evaluation.informative_features.InformativeFeaturesScore import InformativeFeaturesScore
 from src.util.feature_selection_util import get_n_features_from_rank
 from src.util.numpy_util import get_interception_len, normalize
 from src.util.dict_util import add_on_dict_list
-from src.model.Dataset import Dataset
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_with_time
 
@@ -56,18 +57,18 @@ def create_heatmap(selector: BaseSelectorWeight, dataset: Dataset) -> None:
         knows_informative_features = len(dataset.get_informative_features()) > 0
         if CREATE_HEATMAP_BASED_ON_INFORMATIVE_FEATURES and knows_informative_features:
             heatmap = _get_heatmap_based_on_informative_features(selector, dataset)
-            _persist_heatmap(heatmap, selector.get_class_name())
+            _persist_heatmap(heatmap, selector.get_selector_name())
         else:
             if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
                 ranking = selector.get_general_ranking()
                 heatmap = _get_heatmap_based_on_feature_importance_ranking(ranking, selector, dataset)
-                _persist_heatmap(heatmap, f'{selector.get_class_name()} - General')
+                _persist_heatmap(heatmap, f'{selector.get_selector_name()} - General')
             if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities():
                 ranking_per_class = selector.get_ranking_per_class()
                 for label in range(0, dataset.get_n_labels()):
                     ranking = ranking_per_class[label]
                     heatmap = _get_heatmap_based_on_feature_importance_ranking(ranking, selector, dataset)
-                    _persist_heatmap(heatmap, f'{selector.get_class_name()} - Label {label}')
+                    _persist_heatmap(heatmap, f'{selector.get_selector_name()} - Label {label}')
             
 def _persist_heatmap(heatmap, title: str) -> None:
     fig_size = (heatmap.shape[1] * 2.5, heatmap.shape[0] * 0.5)
@@ -79,7 +80,7 @@ def _persist_heatmap(heatmap, title: str) -> None:
     plt.close()
 
 def _get_heatmap_based_on_informative_features(selector: BaseSelectorWeight, dataset: Dataset) -> pd.DataFrame:
-    weights_per_class = selector.get_weights_per_class() if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
+    weights_per_class = selector.get_weights_per_label() if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
     if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
         weights_general = selector.get_general_weights()
         weights_per_class.append(weights_general)
@@ -97,7 +98,7 @@ def _get_heatmap_based_on_informative_features(selector: BaseSelectorWeight, dat
     return pd.DataFrame(headmap, columns=columns, index=dataset.get_feature_names()[0:features_limit])
 
 def _get_heatmap_based_on_feature_importance_ranking(ranking: List[int], selector: BaseSelectorWeight, dataset: Dataset) -> pd.DataFrame:
-    weights_per_class = selector.get_weights_per_class() if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
+    weights_per_class = selector.get_weights_per_label() if SelectorSpecificity.PER_LABEL in selector.get_selection_specificities() else []
     if SelectorSpecificity.GENERAL in selector.get_selection_specificities():
         weights_general = selector.get_general_weights()
         weights_per_class.append(weights_general)

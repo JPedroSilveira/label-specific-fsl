@@ -5,9 +5,9 @@ from torch import nn
 from tqdm import tqdm
 
 from config.type import DatasetConfig
-from src.device import device
+from src.domain.device.DeviceGetter import DeviceGetter
 from src.domain.pytorch.PyTorchPerLabelDataLoaderCreator import PyTorchPerLabelDataLoaderCreator
-from src.model.Dataset import Dataset
+from src.domain.data.types.Dataset import Dataset
 
 from sklearn.utils.class_weight import compute_class_weight
 
@@ -29,7 +29,7 @@ class PyTorchPerLabelFit:
         optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
         # Info variables
         reg = 0.0
-        loss = None
+        loss_without_reg = 0.0
         # Create an outer loop progress bar for epochs
         epoch_iterator = tqdm(range(config.epochs), desc="Epoch Progress")
         # Train
@@ -40,35 +40,36 @@ class PyTorchPerLabelFit:
             iterators = []
             for i in range(0, len(by_label_data_loaders)):
                 iterators.append(iter(by_label_data_loaders[i]))
-                # Setup train mode
-                model.train()
-                # Iterate over data loaders for each class
-                for _ in range(0, len(by_label_data_loaders[0])):
-                    for i in PyTorchPerLabelFit._shuffed_range(0, len(by_label_data_loaders)):
-                        try:
-                            X, y = next(iterators[i])
-                            # Send expected output to model when necessary
-                            if enable_before_forward:
-                                model.before_forward(y, train_dataset.get_label_types())
-                            # Forward pass
-                            y_prediction = model(X)
-                            # Computeh Loss
-                            loss = criterion(y_prediction, y)
-                            if enable_regularization:
-                                reg = model.get_regularization()
-                                loss += reg
-                            # Backpropagation
-                            loss.backward()
-                            # Update weights
-                            optimizer.step()   
-                            # Reset optimizer
-                            optimizer.zero_grad() 
-                            if enable_after_forward:
-                                model.after_forward()
-                        except StopIteration:
-                            continue
+            # Setup train mode
+            model.train()
+            # Iterate over data loaders for each class
+            for _ in range(0, len(by_label_data_loaders[0])):
+                for i in PyTorchPerLabelFit._shuffed_range(0, len(by_label_data_loaders)):
+                    try:
+                        X, y = next(iterators[i])
+                        # Send expected output to model when necessary
+                        if enable_before_forward:
+                            model.before_forward(y, train_dataset.get_label_types())
+                        # Forward pass
+                        y_prediction = model(X)
+                        # Computeh Loss
+                        loss = criterion(y_prediction, y)
+                        loss_without_reg = loss.item()
+                        if enable_regularization:
+                            reg = model.get_regularization()
+                            loss += reg
+                        # Backpropagation
+                        loss.backward()
+                        # Update weights
+                        optimizer.step()   
+                        # Reset optimizer
+                        optimizer.zero_grad() 
+                        if enable_after_forward:
+                            model.after_forward()
+                    except StopIteration:
+                        continue
             epoch_iterator.set_postfix(
-                epoch_loss=f"{loss.item():.8f}", 
+                epoch_loss=f"{loss_without_reg:.8f}", 
                 reg=f"{reg:.8f}"
             )
         epoch_iterator.close()
@@ -79,7 +80,7 @@ class PyTorchPerLabelFit:
         labels = np.unique(y)
         # Compute label weight
         label_weights=compute_class_weight(class_weight="balanced", classes=labels, y=y)
-        label_weights=torch.tensor(label_weights, dtype=torch.float).to(device)
+        label_weights=torch.tensor(label_weights, dtype=torch.float).to(DeviceGetter.execute())
         # Define loss criterion
         cross_entropy_loss = nn.CrossEntropyLoss(weight=label_weights)
         # One hot encoder

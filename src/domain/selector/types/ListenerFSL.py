@@ -1,12 +1,13 @@
+import numpy
 import torch
 import numpy as np
 from numpy import ndarray
 from torch import nn, Tensor
 
 from config.type import DatasetConfig
-from src.device import device
-from src.model.Dataset import Dataset
-from src.model.ClassifierModel import ClassifierModel
+from src.domain.device.DeviceGetter import DeviceGetter
+from src.domain.data.types.Dataset import Dataset
+from src.domain.model.ClassifierModel import ClassifierModel
 from src.domain.pytorch.PyTorchPredict import PyTorchPredict
 from src.domain.pytorch.PyTorchPerLabelFit import PyTorchPerLabelFit
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
@@ -15,10 +16,9 @@ from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 
 class ListenerFSL(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
-        super().__init__(n_features, n_labels)
-        self._model = ClassifierModel(n_features, n_labels).to(device)
-        self._model = ListenerModel(self._model, n_features, n_labels, config.regularization_lambda).to(device)
-        self._config = config
+        super().__init__(n_features, n_labels, config)
+        self._model = ClassifierModel(n_features, n_labels, config).to(DeviceGetter.execute())
+        self._model = ListenerModel(self._model, n_features, n_labels, config.regularization_lambda).to(DeviceGetter.execute())
 
     def get_name() -> str:
         return "Listener"
@@ -42,17 +42,17 @@ class ListenerFSL(BaseSelectorWeight):
     def get_general_weights(self) -> ndarray:
         return self._model.get_activated_weight().clone().detach().cpu().numpy()[0]
     
-    def get_weights_per_class(self) -> ndarray:
+    def get_per_label_weights(self) -> ndarray:
         return self._model.get_weight_per_class()
     
 class ListenerModel(nn.Module):
     def __init__(self, model: nn.Module, n_features: int, n_labels: int, regularization: float) -> None:
         super().__init__()
-        self._weight = nn.Parameter(torch.ones(1, n_features).to(device))
+        self._weight = nn.Parameter(torch.ones(1, n_features).to(DeviceGetter.execute()))
         self._activation = nn.ReLU()
         self._model = model
         self._n_labels = n_labels
-        self._evaluators = torch.Tensor(self.generate_evaluators(n_features)).to(device)
+        self._evaluators = torch.Tensor(numpy.array(self.generate_evaluators(n_features))).to(DeviceGetter.execute())
         self._regularization = regularization
 
     def before_forward(self, y, _) -> None:

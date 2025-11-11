@@ -5,19 +5,19 @@ import numpy as np
 from config.type import DatasetConfig
 from src.domain.pytorch.PyTorchPredict import PyTorchPredict
 from src.domain.pytorch.PyTorchFit import PyTorchFit
-from src.device import device
-from src.model.Dataset import Dataset
+from src.domain.device.DeviceGetter import DeviceGetter
+from src.domain.data.types.Dataset import Dataset
 from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-from src.model.ClassifierModel import ClassifierModel
+from src.domain.model.ClassifierModel import ClassifierModel
 
 from src.domain.data.DatasetsCreator import get_train_and_test_data_from_dataset
 
 
 class LIME(BaseSelectorWeight):
     def __init__(self, n_features, n_labels, config: DatasetConfig) -> None:
-        super().__init__(n_features, n_labels)
-        self._model = ClassifierModel(n_features, n_labels).to(device)
+        super().__init__(n_features, n_labels, config)
+        self._model = ClassifierModel(n_features, n_labels, config).to(DeviceGetter.execute())
         self._n_features = n_features
         self._n_labels = n_labels
         self._k = config.lime_k
@@ -27,7 +27,7 @@ class LIME(BaseSelectorWeight):
         return "LIME"
     
     def can_predict(self) -> bool:
-        return False
+        return True
     
     def get_specificity(self) -> SelectorSpecificity:
         return SelectorSpecificity.PER_LABEL
@@ -89,9 +89,9 @@ class LIME(BaseSelectorWeight):
         return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
  
     def get_general_weights(self) -> np.ndarray:
-        return np.max(self.get_weights_per_class(), axis=0)
+        return np.max(self.get_per_label_weights(), axis=0)
     
-    def get_weights_per_class(self) -> np.ndarray:
+    def get_per_label_weights(self) -> np.ndarray:
         weights_per_class = []
         for class_weights in self._feature_importance:
             weights_per_class.append(class_weights)

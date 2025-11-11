@@ -1,8 +1,8 @@
 import csv
 from typing import List
 
-from src.model.SelectorSpecificity import SelectorSpecificity
-from src.model.SelectorType import SelectorType
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorType import SelectorType
 
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 from src.config.general_config import OUTPUT_PATH, RAW_SELECTION_SUBPATH

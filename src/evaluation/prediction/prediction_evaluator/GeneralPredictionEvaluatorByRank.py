@@ -2,9 +2,9 @@ import numpy as np
 
 
 from src.domain.selector.types.base.BaseSelector import BaseSelector
-from src.model.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
 
-from src.model.SelectorType import SelectorType
+from src.domain.selector.types.enum.SelectorType import SelectorType
 from src.evaluation.prediction.prediction_evaluator.BasePredictionEvaluator import BasePredictionEvaluator
 from src.domain.data.DatasetsCreator import Dataset
 

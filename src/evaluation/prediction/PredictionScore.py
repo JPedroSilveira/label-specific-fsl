@@ -5,7 +5,7 @@ from src.util.classification_report_util import ClassificationScoreReport
 
 class BasePredictionScore():
     def __init__(self, selector: BaseSelector, selection_size: int, report: ClassificationScoreReport) -> None:
-        self.selector_name = selector.get_class_name()
+        self.selector_name = selector.get_selector_name()
         self.report: ClassificationScoreReport = report
         self.selection_size = selection_size
 

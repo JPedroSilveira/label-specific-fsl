@@ -7,11 +7,11 @@ from typing import List, Tuple
 from tabulate import tabulate
 
 from src.domain.selector.types.base.BaseSelector import BaseSelector
+from src.domain.data.types.Dataset import Dataset
+from src.domain.data.types.SplittedDataset import SplittedDataset
 
 import src.config.predictor_types_config as predictor_types_config
 from src.config.general_config import PREDICTOR_INITIAL_END, PREDICTOR_INITIAL_STEP, PREDICTOR_LIMIT, PREDICTOR_SHOULD_CREATE_INDIVIDUAL_CHARTS_FOR_EACH_SELECTION_SIZE, OUTPUT_PATH, PREDICTOR_PERFORMANCE_OUTPUT_SUB_PATH, PREDICTOR_STEP, PREDICTOR_STEP_ON_CHART, SELECTOR_PREDICTION_PERFORMANCE_OUTPUT_SUB_PATH
-from src.model.Dataset import Dataset
-from src.model.SplittedDataset import SplittedDataset
 from src.util.dict_util import add_on_dict_list
 from src.util.performance_util import ExecutionTimeCounter
 from src.util.print_util import print_load_bar, print_with_time
@@ -27,16 +27,10 @@ def calculate_prediction_score_from_selector(selector: BaseSelector, test_datase
     Given a trained selector capable of doing preditions and a test dataset, calculate it's prediction scores
     '''
     score = None
-    print_with_time("Calculating prediction score from selector")
-    timer_counter = ExecutionTimeCounter().start()
-    # Verify if selector is able to do predictions
     if selector.can_predict():
         y_pred = selector.predict(test_dataset)
         report = calculate_classification_report(test_dataset, y_pred)
         score = SelectorPredictionScore(test_dataset.get_n_features(), selector, report)
-        # Print selector prediction F1 Score
-        print_with_time(f"Selector general f1 score: {score.report.general.f1_score}")
-    timer_counter.print_end("Prediction selector test")
     return score
 
 def calculate_prediction_scores_from_feature_selection(selector: BaseSelector, splitted_dataset: SplittedDataset) -> list[PredictorPredictionScoreStatistics]:
@@ -66,7 +60,7 @@ def calculate_prediction_scores_from_feature_selection(selector: BaseSelector, s
                     # Executes the evaluator, that you will a list of scores based on multiple trainings
                     scores = evaluator.calculate(selector, splitted_dataset)
                 if len(scores) > 0:
-                    score_average: PredictorPredictionScoreStatistics = _calculate_prediction_average(selector.get_n_labels(), selector.get_class_name(), scores)
+                    score_average: PredictorPredictionScoreStatistics = _calculate_prediction_average(selector.get_n_labels(), selector.get_selector_name(), scores)
                     score_average.predictor_name = predictor_type.get_name()
                     score_average.evaluator_name = evaluator_type.get_name()
                     score_average.selection_size = selection_size

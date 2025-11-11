@@ -4,15 +4,14 @@ import numpy as np
 from torch import Tensor
 
 from config.type import DatasetConfig
-from src.device import device
-from src.config.general_config import DATA_TYPE, CLASS_TYPE
+from src.domain.device.DeviceGetter import DeviceGetter
 from src.util.numpy_util import convert_nparray_to_tensor
 
 
 class PyTorchDataset(pydata.Dataset):
   def __init__(self, X: np.ndarray, y: np.ndarray, config: DatasetConfig) -> None:
-    self._x = convert_nparray_to_tensor(X, data_type=getattr(torch, config.data_type), device=device)
-    self._y = convert_nparray_to_tensor(y, data_type=getattr(torch, config.class_type), device=device)
+    self._x = convert_nparray_to_tensor(X, data_type=getattr(torch, config.data_type), device=DeviceGetter.execute())
+    self._y = convert_nparray_to_tensor(y, data_type=getattr(torch, config.label_type), device=DeviceGetter.execute())
     self._len = self._x.shape[0]
 
   def __getitem__(self, index) -> tuple[Tensor, Tensor]:

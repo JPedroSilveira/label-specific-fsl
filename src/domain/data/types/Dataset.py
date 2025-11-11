@@ -1,6 +1,5 @@
-from typing import List
 import numpy as np
-from scipy.sparse.tests.test_base import spmatrix
+from typing import List
 from sklearn import preprocessing
 
 
@@ -15,6 +14,9 @@ class Dataset():
 
     def get_features(self) -> np.ndarray:
         return self._features
+    
+    def set_features(self, features: np.ndarray) -> None:
+        self._features = features
     
     def get_encoded_labels(self) -> np.ndarray[np.ndarray]:
         labels = np.array(self.get_labels()).reshape(-1, 1)

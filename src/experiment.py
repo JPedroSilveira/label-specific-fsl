@@ -2,46 +2,46 @@ import selectors
 import uuid
 import hydra
 import matplotlib as plt
-from skimage import data
+from typing import List
 
 from config.type import Config
+from src.domain.timer.ExecutionTimeStats import ExecutionTimeStats
+from src.domain.storage.ExecutionStorage import ExecutionStorage
+from src.domain.pytorch.TestGPU import TestGPU
+from src.domain.log.Logger import Logger
+from src.domain.stability.SelectorStabilityMetric import SelectorStabilityMetric
+from src.domain.prediction.SelectorPredictionMetric import SelectorPredictionMetric
+from src.domain.seed.SeedSetter import SeedSetter
+from src.domain.data.DatasetNormalizer import DatasetNormalizer
+from src.domain.data.DatasetScaler import DatasetScaler
+from src.domain.weight.WeightPersistence import WeightPersistence
 from src.domain.selector.SelectorTypeCreator import SelectorTypeCreator
 from src.domain.data.DatasetsCreator import DatasetsCreator
 from src.domain.data.KFoldCreator import KFoldCreator
 from src.domain.data.DatasetLoader import DatasetLoader
 from src.domain.folder.OutputFolderCreator import OutputFolderCreator
-
+from src.domain.timer.ExecutionTimeCounter import ExecutionTimeCounter
 # Non refactored imports
-
-from typing import List
-from src.evaluation.occlusion.OcclusionScore import OcclusionScore, OcclusionScorePerLabel
-from src.util.selection_persistence import persist_rank, persist_weights, persist_execution_metrics
-from src.util.performance_util import ExecutionTimeCounter
-from src.util.print_util import print_with_time
-from src.util.dict_util import add_on_dict_list
-from src.history.ExecutionHistory import ExecutionHistory
-from src.evaluation.execution_time.ExecutionTime import create_execution_time_table_and_chart
-from src.evaluation.informative_features.InformativeFeaturesScore import InformativeFeaturesScore
-from src.evaluation.informative_features.InformativeFeatures import calculate_informative_features_scores, create_heatmap, create_informative_features_scores_output
-from src.evaluation.stability.Stability import calculate_stability_scores, create_stability_table_and_charts, generate_feature_selection_stability_chart
-from src.evaluation.stability.StabilityScore import StabilityScore
-from src.evaluation.prediction.Prediction import calculate_prediction_score_from_selector, calculate_prediction_average_from_selector, calculate_prediction_scores_from_feature_selection, create_selectors_prediction_average_table_and_chart, create_predictors_table_and_chart, create_selectors_prediction_chart
-from src.evaluation.prediction.PredictionAverage import SelectorPredictionScoreStatistics, PredictorPredictionScoreStatistics
-from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
-from src.evaluation.occlusion.Occlusion import calculate_and_persist_occlusion, persist_merged_occlusion
 
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def execute_experiment(config: Config) -> None:
+    # Set seeds
+    SeedSetter.execute(config)
+    
     # Disable Matplot open figures alert as more than 20 figures are necessary to generate video
     plt.rcParams.update({'figure.max_open_warning': 0})
     
-    # Create execution id
-    execution_id = str(uuid.uuid4())
-    print(f'Execution ID: {execution_id}')
-
     # Create outputs folders to save results
+    execution_id = str(uuid.uuid4())
     OutputFolderCreator.execute(config.output, execution_id)
+    
+    # Start logger
+    Logger.setup(config)
+    Logger.execute(f'[STARTED] Execution ID: {execution_id}')
+    
+    # Test GPU
+    TestGPU.execute()
     
     # Start total execution time
     execution_time_counter = ExecutionTimeCounter().start()
@@ -51,22 +51,72 @@ def execute_experiment(config: Config) -> None:
     
     # Split data into train and test sets
     splitted_dataset = DatasetsCreator.execute(dataframe, config)
-    
-    print(f"Dataset features: {splitted_dataset.get_n_features()}")
-    print(f"Dataset labels: {splitted_dataset.get_n_labels()}")
-    print(f"Train samples: {splitted_dataset.get_train().get_n_samples()}")
-    print(f"Test samples: {splitted_dataset.get_test().get_n_samples()}")
+    Logger.execute(f"Dataset features: {splitted_dataset.get_n_features()}")
+    Logger.execute(f"Dataset labels: {splitted_dataset.get_n_labels()}")
+    Logger.execute(f"Train samples: {splitted_dataset.get_train().get_n_samples()}")
+    Logger.execute(f"Test samples: {splitted_dataset.get_test().get_n_samples()}")
 
+    # Apply normalization
+    DatasetNormalizer.execute(splitted_dataset, config.dataset)
+    
+    # Apply scaling
+    DatasetScaler.execute(splitted_dataset, config.dataset)
+    
     # Define KFold datasets
-    k_datasets = KFoldCreator.execute(splitted_dataset.get_train(), config)
-    print(f'K-Fold datasets created: {len(k_datasets)}')
+    k_train_datasets = KFoldCreator.execute(splitted_dataset.get_train(), config)
+    Logger.execute(f'K-Fold datasets created: {len(k_train_datasets)}')
     
     # Define selectors
-    selectors_types = SelectorTypeCreator.execute(config)
-    print("Defined selectors:")
-    for selectors_type in selectors_types:
-        print(f'- {selectors_type.get_name()}')
+    selectors_class = SelectorTypeCreator.execute(config)
+    Logger.execute("Defined selectors:")
+    for selector_class in selectors_class:
+        Logger.execute(f'- {selector_class.get_name()}')
+        
+    # Get feature names
+    feature_names = splitted_dataset.get_test().get_feature_names()
     
+    # Create a storage
+    storage = ExecutionStorage()
+        
+    # Train for each fold
+    for id, train_dataset in enumerate(k_train_datasets):
+        Logger.execute(f'Training fold {id+1} of {len(k_train_datasets)}')
+        # Train each selector
+        for selector_class in selectors_class:
+            Logger.execute(f'================================================')
+            Logger.execute(f'Running for selector {selector_class.get_name()}')
+            # Create an instance of selector
+            selector = selector_class(train_dataset.get_n_features(), train_dataset.get_n_labels(), config.dataset)
+            # Start execution timer
+            selector_execution_time_counter = ExecutionTimeCounter().start()
+            # Fit selector
+            selector.fit(train_dataset, splitted_dataset.get_test())
+            # Calculate execution time
+            selector_execution_time = selector_execution_time_counter.print_end('Selector training').get_execution_time()
+            storage.add_execution_time(selector, selector_execution_time)
+            # Calculate prediction score of selector if available
+            if selector.can_predict():
+                prediction_score = SelectorPredictionMetric.execute(selector, splitted_dataset.get_test())
+                Logger.execute(f'F1 Score: {prediction_score.report.general.f1_score}')
+            # Persist weights
+            WeightPersistence.execute(id, selector, config.output, feature_names)
+    
+    # Calculate metrics
+    ExecutionTimeStats.execute(selectors_class, storage)
+    SelectorStabilityMetric.execute(selectors_class, config)
+    # TODO: Implement new stability metric
+    # TODO: Implement all datasets [XOR, SynthA, SynthB, SynthC, Liver, Colorectal, Breast]
+    # TODO: Store prediction performance
+    # TODO: Implement WTSNE + silhouette
+    # TODO: Implement Feature ranking positions  
+    # TODO: Implement PIFS and PSFI metrics with graph
+    # TODO: Implement Heatmap
+    # TODO: Implement Predictor training with graph (SVC)
+    # TODO: Implement Feature erasure
+    
+    Logger.execute(f'[COMPLETED] Execution ID: {execution_id}')
+    Logger.execute(f'- Time: {execution_time_counter.get_execution_time()}s')
+            
     return
 
     # Initialize metrics dictionaries per selector

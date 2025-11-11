@@ -1,10 +1,10 @@
 import numpy as np
 from typing import List
 
-from src.model.SelectorSpecificity import SelectorSpecificity
-from src.model.SelectorType import SelectorType
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorType import SelectorType
 from src.domain.selector.types.base.BaseSelector import BaseSelector
-from src.model.SplittedDataset import SplittedDataset
+from src.domain.data.types.SplittedDataset import SplittedDataset
 from src.evaluation.prediction.PredictionScore import SelectorPredictionScore
 
 class HistoryItem():
@@ -63,7 +63,7 @@ class HistoryItem():
                 self._weights = selector.get_general_weights()
                 self._rank = selector.get_general_ranking()
             if SelectorSpecificity.PER_LABEL in selector_specificities:
-                self._weights_per_class = selector.get_weights_per_class()
+                self._weights_per_class = selector.get_weights_per_label()
                 self._rank_per_class = selector.get_ranking_per_class()
         elif selector_mode == SelectorType.RANK:
             if SelectorSpecificity.GENERAL in selector_specificities:
@@ -118,7 +118,7 @@ class ExecutionHistory():
     def add(self, selector: BaseSelector, dataset: SplittedDataset, execution_time: float, prediction_score: SelectorPredictionScore | None) -> None:
         if self._selector is None:
             self._selector = selector
-            self._selector_name = selector.get_class_name()
+            self._selector_name = selector.get_selector_name()
             self._labels = dataset.get_label_types()
             self._n_labels = dataset.get_n_labels()
             self._n_features = dataset.get_n_features()

@@ -1,7 +1,7 @@
 from torch import Tensor, nn
 
 from config.type import DatasetConfig
-from src.device import device
+from src.domain.device.DeviceGetter import DeviceGetter
 
 
 class ClassifierModel(nn.Module):
@@ -36,7 +36,7 @@ class ClassifierModel(nn.Module):
                 nn.Dropout(0.1),
                 nn.Linear(100, output_size)
             )
-        self._model = self._src.model.to(device)
+        self._model = self._model.to(DeviceGetter.execute())
 
     def forward(self, x) -> Tensor:
         return self._model(x)

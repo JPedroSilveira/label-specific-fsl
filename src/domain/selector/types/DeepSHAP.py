@@ -1,32 +1,30 @@
 import shap
 import numpy as np
 
+from src.domain.device.DeviceGetter import DeviceGetter
 from src.domain.pytorch.PyTorchPredict import PyTorchPredict
 from src.domain.pytorch.PyTorchFit import PyTorchFit
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
-from src.model.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
 from src.domain.data.DatasetLoader import DatasetConfig
-from src.model.Dataset import Dataset
-from src.model.ClassifierModel import ClassifierModel
-from src.device import device
+from src.domain.data.types.Dataset import Dataset
+from src.domain.model.ClassifierModel import ClassifierModel
 
-from src.util.array_util import get_weight_per_class_from_shap
 from src.util.numpy_util import convert_nparray_to_tensor
 
 
 class DeepSHAP(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
-        super().__init__(n_features, n_labels)
-        self._model = ClassifierModel(n_features, n_labels).to(device)
+        super().__init__(n_features, n_labels, config)
+        self._model = ClassifierModel(n_features, n_labels, config).to(DeviceGetter.execute())
         self._k = config.shap_k
         self._representative_k = config.shap_representative_k
-        self._config = config
 
     def get_name() -> str:
         return "DeepSHAP"
     
     def can_predict(self) -> bool:
-        return False
+        return True
 
     def get_specificity(self) -> SelectorSpecificity:
         return SelectorSpecificity.PER_LABEL
@@ -52,7 +50,17 @@ class DeepSHAP(BaseSelectorWeight):
         return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
     
     def get_general_weights(self) -> np.ndarray:
-        return np.max(self.get_weights_per_class(), axis=0)
+        return np.max(self.get_per_label_weights(), axis=0)
     
-    def get_weights_per_class(self) -> np.ndarray:
-        return get_weight_per_class_from_shap(np.abs(self._shap_values).mean(0))
+    def get_per_label_weights(self) -> np.ndarray:
+        shap_values = np.abs(self._shap_values).mean(0)
+        n_labels = len(shap_values[0])
+        transpose = []
+        for i in range(0, n_labels):
+            transpose.append([])
+        for feature_per_class in shap_values:
+            for i in range(0, n_labels):
+                transpose[i].append(feature_per_class[i])
+        for i in range(0, n_labels):
+            transpose[i] = np.array(transpose[i], dtype=np.float64)
+        return transpose

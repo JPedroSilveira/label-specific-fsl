@@ -1,0 +1,11 @@
+- model: DecisionTree
+- model: RandomForest
+- model: KruskalWallis
+- model: ReliefF
+- model: Lasso
+- model: LIME
+- model: DeepSHAP
+- model: ListenerFSL
+- model: ResidualFSL
+- model: OutputAwareFSL
+- model: MultipleFSL

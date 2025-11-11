@@ -3,14 +3,14 @@ from typing import List, Type
 
 import src.config.general_config as general_config
 
-from src.model.SelectorSpecificity import SelectorSpecificity
-from src.model.SelectorType import SelectorType, is_compatible_mode
-
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
+from src.domain.selector.types.enum.SelectorType import SelectorType, is_compatible_mode
 from src.domain.predictor.types.base.BasePredictor import BasePredictor
 from src.domain.selector.types.base.BaseSelector import BaseSelector
-from src.model.SplittedDataset import SplittedDataset
+from src.domain.data.types.SplittedDataset import SplittedDataset
+from src.domain.data.types.Dataset import Dataset
+
 from src.util.classification_report_util import calculate_classification_report
-from src.model.Dataset import Dataset
 from src.evaluation.prediction.PredictionScore import PredictorPredictionScore
 from src.util.feature_selection_util import get_n_features_from_rank
 
@@ -28,7 +28,7 @@ class BasePredictionEvaluator():
         """
         Return a identifier for the evaluation type
         """
-        raise NotImplemented("")
+        raise NotImplementedError()
     
     def get_class_name(self) -> str:
         return self.__class__.get_name()
@@ -37,16 +37,16 @@ class BasePredictionEvaluator():
         """
         Return the selection mode which will be evaluated
         """
-        raise NotImplemented("")
+        raise NotImplementedError()
     
     def _get_selecion_specificity(self) -> SelectorSpecificity:
         """
         Return the selection specificity which will be evaluated
         """
-        raise NotImplemented("")
+        raise NotImplementedError()
 
     def _get_selected_features(self, selector: BaseSelector, dataset: Dataset, selection_size: int) -> np.ndarray:
-        raise NotImplemented("")
+        raise NotImplementedError()
     
     def should_execute(self, selector: BaseSelector):
         '''

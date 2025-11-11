@@ -3,7 +3,7 @@ import numpy as np
 import torch.utils.data as pydata
 
 from config.type import DatasetConfig
-from src.model.PyTorchDataset import PyTorchDataset
+from src.domain.data.types.PyTorchDataset import PyTorchDataset
 
 class PyTorchDataLoaderCreator:
     @staticmethod

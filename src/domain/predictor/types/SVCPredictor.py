@@ -13,8 +13,8 @@ class SVCPredictor(BasePredictor):
         return "SVC"
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> None: 
-        self._src.model.fit(X, y)
+        self._model.fit(X, y)
     
     def predict(self, X: np.ndarray) -> np.ndarray:
-        y_pred = self._src.model.predict(X)
+        y_pred = self._model.predict(X)
         return y_pred

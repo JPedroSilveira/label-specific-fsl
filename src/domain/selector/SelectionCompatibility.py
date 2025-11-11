@@ -1,4 +1,4 @@
-from model.SelectorType import SelectorType
+from src.domain.selector.types.enum.SelectorType import SelectorType
 
 
 _selection_compatibilities = {
