@@ -2,8 +2,8 @@ defaults:
     - _self_
     - dataset: xor
     - selectors: default
-    - stability: default
-random_seed: 42
+    - stability_metric: default
+    - stability_reduced: top2
 feature:
     informative_prefix: "informative_"
     informative_per_label_prefix: "informative_per_label_"

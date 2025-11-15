@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List
+from typing import List, Self, Type
 from sklearn import preprocessing
 
 

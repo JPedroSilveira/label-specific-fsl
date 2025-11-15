@@ -18,13 +18,13 @@ class BaseSelectorWeight(BaseSelector):
         return SelectorType.WEIGHT
     
     def get_general_ranking(self) -> np.ndarray:
-        if self._general_ranking is None and self.get_specificity() == SelectorSpecificity.GENERAL:
+        if self._general_ranking is None:
             self._general_ranking = calculate_rank_from_weights(self.get_general_weights())
    
         return self._general_ranking
 
     def get_per_label_ranking(self) -> List[np.ndarray]:
-        if self._per_class_ranking is None and self.get_specificity() == SelectorSpecificity.PER_LABEL:
+        if self._per_class_ranking is None:
             self._per_class_ranking = [calculate_rank_from_weights(weights) for weights in self.get_weights_per_label()]
    
         return self._per_class_ranking

@@ -173,3 +173,5 @@ cython_debug/
 output/
 outputs/
 folder_structure_goal.txt
+
+dataset/*csv

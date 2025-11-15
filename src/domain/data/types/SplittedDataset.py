@@ -5,8 +5,16 @@ from src.domain.data.types.Dataset import Dataset
 
 
 class SplittedDataset():
-    def __init__(self, features_train: np.ndarray, features_test:np.ndarray, labels_train: np.ndarray, labels_test: np.ndarray, label_types: List, feature_names: List[str], 
+    def __init__(self, features: np.ndarray, labels:np.ndarray, features_train: np.ndarray, features_test:np.ndarray, labels_train: np.ndarray, labels_test: np.ndarray, label_types: List, feature_names: List[str], 
                  informative_features: List[int], informative_features_per_label: dict[int, list[int]]) -> None:
+        self._complete_dataset = Dataset(
+            features=features, 
+            labels=labels,
+            label_types=label_types, 
+            feature_names=feature_names,
+            informative_features=informative_features, 
+            informative_features_per_label=informative_features_per_label
+        )
         self._train_dataset = Dataset(
             features=features_train, 
             labels=labels_train,
@@ -33,6 +41,9 @@ class SplittedDataset():
     
     def get_test(self) -> Dataset:
         return self._test_dataset
+    
+    def get_complete(self) -> Dataset:
+        return self._complete_dataset
     
     def get_n_features(self) -> int:
         return self._train_dataset.get_n_features()

@@ -1,0 +1,24 @@
+root: "dataset"
+filename: "Liver_GSE22405.csv"
+label_column: "type"
+ignored_columns: 
+  - "samples"
+test_percentage: 15
+k_fold: 11
+k_fold_repeat: 1
+regularization_lambda: 0.001
+lime_k: 50
+shap_k: 50
+shap_representative_k: 50
+relieff_k: 50
+lasso_regularization: 0.01
+data_type: "float32"
+label_type: "long"
+batch_size: 8
+epochs: 600
+learning_rate: 0.001
+model: 1
+scale: true
+normalize: false
+jaccard_k: 30
+random_seed: 42

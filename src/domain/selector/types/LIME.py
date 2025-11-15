@@ -10,8 +10,7 @@ from src.domain.data.types.Dataset import Dataset
 from src.domain.selector.types.base.BaseSelector import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelectorWeight import BaseSelectorWeight
 from src.domain.model.ClassifierModel import ClassifierModel
-
-from src.domain.data.DatasetsCreator import get_train_and_test_data_from_dataset
+from src.domain.data.DatasetSplitter import DatasetSplitter
 
 
 class LIME(BaseSelectorWeight):
@@ -43,7 +42,7 @@ class LIME(BaseSelectorWeight):
         else:
             k_dataset_percent = self._k / len(train_dataset.get_features())
             # Split the test dataset to get a subset that respects k
-            k_dataset = get_train_and_test_data_from_dataset(train_dataset, test_size=k_dataset_percent).get_test()
+            k_dataset = DatasetSplitter.execute(train_dataset, k_dataset_percent, self._config).get_test()
         explainer = lime.lime_tabular.LimeTabularExplainer(
             mode='classification',
             training_data=train_dataset.get_features(), 

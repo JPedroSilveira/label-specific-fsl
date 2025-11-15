@@ -1,12 +1,12 @@
 root: "dataset"
-filename: "xor_500samples_50features.csv"
+filename: "synth_3classes_3000samples_300features_30informative_10informativeperclass.csv"
 label_column: "class"
 ignored_columns: 
   - "id"
 test_percentage: 20
 k_fold: 11
 k_fold_repeat: 1
-regularization_lambda: 0.01
+regularization_lambda: 0.001
 lime_k: 1000
 shap_k: 1000
 shap_representative_k: 1000
@@ -14,11 +14,11 @@ relieff_k: 1000
 lasso_regularization: 0.01
 data_type: "float32"
 label_type: "long"
-batch_size: 256
-epochs: 1000
+batch_size: 32
+epochs: 150
 learning_rate: 0.001
 model: 1
 scale: true
 normalize: false
-jaccard_k: 2
+jaccard_k: 30
 random_seed: 42

@@ -41,6 +41,7 @@ class DatasetConfig:
     scale: bool
     normalize: bool
     jaccard_k: int
+    random_seed: int
 
 class FeatureConfig:
     informative_prefix: str
@@ -49,16 +50,16 @@ class FeatureConfig:
 class SelectorConfig:
     model: str
     
-class StabilityConfig:
-    metric: str
+class StabilityMetric:
+    name: str
 
 class Config:
     output: OutputConfig
     dataset: DatasetConfig
     feature: FeatureConfig
-    random_seed: int
     selectors: List[SelectorConfig]
-    stability: List[StabilityConfig]
+    stability_metric: List[StabilityMetric]
+    stability_reduced: List[int]
 
     
         

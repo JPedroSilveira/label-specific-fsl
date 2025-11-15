@@ -2,12 +2,12 @@ import random
 import torch
 import numpy as np
 
-from config.type import Config
+from config.type import DatasetConfig
 
 
 class SeedSetter:
     @staticmethod
-    def execute(config: Config) -> None:
+    def execute(config: DatasetConfig) -> None:
         random.seed(config.random_seed)
         np.random.seed(config.random_seed)
         torch.manual_seed(config.random_seed)

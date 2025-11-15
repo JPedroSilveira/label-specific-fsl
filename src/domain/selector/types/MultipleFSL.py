@@ -61,7 +61,7 @@ class MultipleFSLModel(nn.Module):
     def forward(self, x) -> Tensor:
         weights_by_label = self.get_activated_weight()
         for i in range(0, self._n_labels):
-            input = x * weights_by_label[i] 
+            input = x * weights_by_label[i]
             if i == 0:
                 output = self._model(input) * self._label_selectors[i]
             else:
@@ -69,7 +69,10 @@ class MultipleFSLModel(nn.Module):
         return output
 
     def get_regularization(self) -> Tensor:
-        return self._regularization * torch.sum(torch.abs(self.get_weight()))
+        return self._regularization * torch.abs(torch.sum(self.get_weight()))
+        #return self._regularization * torch.sum(torch.abs(self.get_weight()))
+        #return self._regularization * torch.sum(self.get_activated_weight())
+        #return torch.abs(self._n_features - (torch.sum(self.get_activated_weight()) / self._n_labels))
 
     def get_weight(self) -> Tensor:
         return self._weights

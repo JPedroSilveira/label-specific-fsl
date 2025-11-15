@@ -2,7 +2,7 @@ import statistics
 from typing import List, Type
 
 from src.domain.log.Logger import Logger
-from src.domain.selector.types.base import BaseSelector
+from src.domain.selector.types.base.BaseSelector import BaseSelector
 from src.domain.storage.ExecutionStorage import ExecutionStorage
 
 
@@ -17,4 +17,5 @@ class ExecutionTimeStats:
             stdev = statistics.stdev(execution_times)
             Logger.execute(f"-- Mean: {mean}")
             Logger.execute(f"-- Standard deviation: {stdev}")
+            Logger.execute(f"-- Values: {execution_times}")
             

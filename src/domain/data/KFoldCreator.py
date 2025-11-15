@@ -1,22 +1,21 @@
-from typing import List, Tuple
 import numpy as np
-import pandas as pd
+from typing import List
 from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 
-from config.type import Config
-from src.domain.data.DatasetsCreator import Dataset
+from config.type import DatasetConfig
+from src.domain.data.types.Dataset import Dataset
 
 
 class KFoldCreator:
     @staticmethod
-    def execute(dataset: Dataset, config: Config) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
-        if config.dataset.k_fold == 0:
-            return [dataset for _ in range(0, config.dataset.k_fold_repeat)]
+    def execute(dataset: Dataset, config: DatasetConfig) -> List[Dataset]:
+        if config.k_fold == 0:
+            return [dataset for _ in range(0, config.k_fold_repeat)]
         datasets = []
-        if config.dataset.k_fold_repeat > 1:
-            kf = RepeatedStratifiedKFold(n_splits=config.dataset.k_fold, n_repeats=config.dataset.k_fold_repeat, random_state=config.random_seed)
+        if config.k_fold_repeat > 1:
+            kf = RepeatedStratifiedKFold(n_splits=config.k_fold, n_repeats=config.k_fold_repeat, random_state=config.random_seed)
         else:
-            kf = StratifiedKFold(n_splits=config.dataset.k_fold, shuffle=True, random_state=config.random_seed)
+            kf = StratifiedKFold(n_splits=config.k_fold, shuffle=True, random_state=config.random_seed)
         X = dataset.get_features()
         y = np.array(dataset.get_labels())
         for train_index, test_index in kf.split(X, y):

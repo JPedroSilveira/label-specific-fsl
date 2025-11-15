@@ -5,6 +5,10 @@ import matplotlib as plt
 from typing import List
 
 from config.type import Config
+from src.domain.wtsne.WTSNECreator import WTSNECreator
+from src.domain.data.LabelConverter import LabelConverter
+from src.domain.stability.ReducedSetStabilityResultAggregator import ReducedSetStabilityResultAggregator
+from src.domain.stability.ReducedSetStabilityMetric import ReducedSetStabilityMetric
 from src.domain.timer.ExecutionTimeStats import ExecutionTimeStats
 from src.domain.storage.ExecutionStorage import ExecutionStorage
 from src.domain.pytorch.TestGPU import TestGPU
@@ -27,7 +31,7 @@ from src.domain.timer.ExecutionTimeCounter import ExecutionTimeCounter
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def execute_experiment(config: Config) -> None:
     # Set seeds
-    SeedSetter.execute(config)
+    SeedSetter.execute(config.dataset)
     
     # Disable Matplot open figures alert as more than 20 figures are necessary to generate video
     plt.rcParams.update({'figure.max_open_warning': 0})
@@ -49,6 +53,9 @@ def execute_experiment(config: Config) -> None:
     # Load data
     dataframe = DatasetLoader.execute(config.dataset)
     
+    # Convert labels to long
+    LabelConverter.execute(dataframe, config.dataset)
+    
     # Split data into train and test sets
     splitted_dataset = DatasetsCreator.execute(dataframe, config)
     Logger.execute(f"Dataset features: {splitted_dataset.get_n_features()}")
@@ -63,7 +70,7 @@ def execute_experiment(config: Config) -> None:
     DatasetScaler.execute(splitted_dataset, config.dataset)
     
     # Define KFold datasets
-    k_train_datasets = KFoldCreator.execute(splitted_dataset.get_train(), config)
+    k_train_datasets = KFoldCreator.execute(splitted_dataset.get_train(), config.dataset)
     Logger.execute(f'K-Fold datasets created: {len(k_train_datasets)}')
     
     # Define selectors
@@ -100,11 +107,17 @@ def execute_experiment(config: Config) -> None:
                 Logger.execute(f'F1 Score: {prediction_score.report.general.f1_score}')
             # Persist weights
             WeightPersistence.execute(id, selector, config.output, feature_names)
-    
+            reduced_stability_score_per_size_per_label_per_metric = ReducedSetStabilityMetric.execute(selector, selector_class, train_dataset, splitted_dataset.get_test(), config)
+            storage.add_reduced_stability_score(selector, reduced_stability_score_per_size_per_label_per_metric)
+            
     # Calculate metrics
     ExecutionTimeStats.execute(selectors_class, storage)
     SelectorStabilityMetric.execute(selectors_class, config)
+    ReducedSetStabilityResultAggregator.execute(selectors_class, storage)
+    WTSNECreator.execute(selectors_class, splitted_dataset.get_complete(), config)
+    
     # TODO: Implement new stability metric
+    # TODO: Change @staticmethod to @classmethod
     # TODO: Implement all datasets [XOR, SynthA, SynthB, SynthC, Liver, Colorectal, Breast]
     # TODO: Store prediction performance
     # TODO: Implement WTSNE + silhouette
