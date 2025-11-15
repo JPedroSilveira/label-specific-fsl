@@ -31,10 +31,12 @@ class WTSNECreator:
                 for specificity in weights_per_specificity.keys():
                     weights_per_selector_and_specificity[selector_class.get_name][specificity] = []
                     weights = weights_per_specificity[specificity]
+                    embedding_silhouettes = []
                     for execution, execution_weights in enumerate(weights):
                         embedding_silhouette = cls._calculate_wtsne(execution, specificity, selector_class, execution_weights, dataset, config)
                         weights_per_selector_and_specificity[selector_class.get_name][specificity].append(embedding_silhouette)
-                        Logger.execute(f"-- Label {specificity} [{execution}]: {embedding_silhouette}")    
+                        embedding_silhouettes.append(embedding_silhouette)
+                    Logger.execute(f"-- Label {specificity}: {embedding_silhouettes}")    
                     
     @staticmethod
     def _calculate_wtsne(execution: int, specificity: str, selector_class: BaseSelector, weights: DataFrame, dataset: Dataset, config: Config) -> float:     
@@ -44,7 +46,7 @@ class WTSNECreator:
         if weights is not None:
             title = f"Weighted TSNE"
             weights = weights['value'].to_numpy()
-            W = StandardScaler().fit_transform(weights)
+            W = StandardScaler().fit_transform(weights.reshape(-1, 1))
             W = np.tile(W,(1, X.shape[0])).transpose()
             X = np.multiply(W,X)
         tsne = TSNE(
@@ -84,7 +86,7 @@ class WTSNECreator:
                 alpha=0.6,
                 label=None
             )
-        plt.title(title)
+        #plt.title(title)
         #plt.xlabel("t-SNE 1")
         #plt.ylabel("t-SNE 2")
         plt.grid(True)

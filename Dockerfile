@@ -18,6 +18,7 @@ COPY requirements-torch.txt .
 # Install dependencies using UV
 RUN uv pip install -r requirements.txt --system
 RUN uv pip install -r requirements-torch.txt --extra-index-url https://download.pytorch.org/whl/cu130 --system
+RUN sudo apt install libxcb-cursor0
 
 # Copy the application code into the container at /app
 COPY . .
