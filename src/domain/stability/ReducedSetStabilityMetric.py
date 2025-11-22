@@ -3,6 +3,7 @@ import numpy as np
 from typing import Dict, List, Tuple, Type
 
 from config.type import Config
+from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
 from src.domain.stability.StabilityMetricTypeCreator import StabilityMetricTypeCreator
 from src.domain.stability.types.base.BaseStabilityMetric import BaseStabilityMetric
 from src.domain.data.FeatureRemover import FeatureRemover
@@ -39,18 +40,19 @@ class ReducedSetStabilityMetric:
     @classmethod
     def _compare_per_label_weights(cls, metrics: List[Type[BaseStabilityMetric]], selector: BaseSelector, reduced_selector: BaseSelector, train_dataset: Dataset, reduced_train_dataset: Dataset, top_k_features: np.ndarray, config: Config) -> Dict[str, Dict[str, float]]:
         score_per_label_per_metric: Dict[str, Dict[str, float]] = {}
-        selector_per_label_weights = selector.get_per_label_weights()
-        reduced_selector_per_label_weights = reduced_selector.get_per_label_weights()
-        if selector_per_label_weights is not None:
-            for label, selector_weights in enumerate(selector_per_label_weights):
-                reduced_selector_weights = reduced_selector_per_label_weights[label]
-                selector_weights_df = cls._get_reduced_weights(selector_weights, train_dataset.get_feature_names(), top_k_features)
-                reduced_selector_weight_df = cls._get_weights_as_dataframe(reduced_selector_weights, reduced_train_dataset.get_feature_names())
-                score_per_metric: Dict[str,float] = {}
-                for metric in metrics:
-                    score = metric.execute(selector_weights_df, reduced_selector_weight_df, config)
-                    score_per_metric[metric.get_name()] = score
-                score_per_label_per_metric[label] = score_per_metric
+        if selector.get_specificity() is SelectorSpecificity.PER_LABEL:
+            selector_per_label_weights = selector.get_per_label_weights()
+            reduced_selector_per_label_weights = reduced_selector.get_per_label_weights()
+            if selector_per_label_weights is not None:
+                for label, selector_weights in enumerate(selector_per_label_weights):
+                    reduced_selector_weights = reduced_selector_per_label_weights[label]
+                    selector_weights_df = cls._get_reduced_weights(selector_weights, train_dataset.get_feature_names(), top_k_features)
+                    reduced_selector_weight_df = cls._get_weights_as_dataframe(reduced_selector_weights, reduced_train_dataset.get_feature_names())
+                    score_per_metric: Dict[str,float] = {}
+                    for metric in metrics:
+                        score = metric.execute(selector_weights_df, reduced_selector_weight_df, config)
+                        score_per_metric[metric.get_name()] = score
+                    score_per_label_per_metric[label] = score_per_metric
         return score_per_label_per_metric
             
     @classmethod

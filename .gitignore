@@ -174,4 +174,6 @@ output/
 outputs/
 folder_structure_goal.txt
 
-dataset/*csv
+dataset/Breast_GSE45827.csv
+dataset/Liver_GSE22405.csv
+dataset/Prostate_GSE11682.csv

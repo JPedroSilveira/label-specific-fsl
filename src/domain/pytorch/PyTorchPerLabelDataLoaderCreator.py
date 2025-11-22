@@ -18,5 +18,5 @@ class PyTorchPerLabelDataLoaderCreator:
                     label_X.append(X[i].tolist())
                     label_y.append(y[i].tolist())
             pyTorchData = PyTorchDataset(label_X, label_y, config)
-            data_loader_by_label[label_type] = pydata.DataLoader(pyTorchData, shuffle=True, batch_size=config.batch_size)
+            data_loader_by_label[label_type] = pydata.DataLoader(pyTorchData, shuffle=False, batch_size=config.batch_size)
         return data_loader_by_label

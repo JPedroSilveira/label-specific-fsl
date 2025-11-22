@@ -7,6 +7,7 @@ from typing import Dict, List, Type
 import matplotlib.pyplot as plt
 
 from config.type import Config
+from src.domain.data.Normalizer import Normalizer
 from src.domain.data.types.Dataset import Dataset 
 from src.domain.data.WeightReader import WeightReader
 from src.domain.selector.types.base.BaseSelector import BaseSelector
@@ -46,13 +47,12 @@ class WTSNECreator:
         if weights is not None:
             title = f"Weighted TSNE"
             weights = weights['value'].to_numpy()
-            W = StandardScaler().fit_transform(weights.reshape(-1, 1))
-            W = np.tile(W,(1, X.shape[0])).transpose()
-            X = np.multiply(W,X)
+            W = Normalizer.execute(weights)
+            X = X * W
         tsne = TSNE(
             n_components=2,
             perplexity=30,
-            max_iter=500,
+            max_iter=1000,
             verbose=1,
             random_state=config.dataset.random_seed
         )
@@ -84,11 +84,17 @@ class WTSNECreator:
                 c=colors[i % len(colors)],
                 marker=markers[i % len(markers)],
                 alpha=0.6,
-                label=None
+                label=label
             )
         #plt.title(title)
         #plt.xlabel("t-SNE 1")
         #plt.ylabel("t-SNE 2")
+        plt.legend(title="Classes", loc='best') # Add the legend after all scatter calls
+        
+        # --- Add Title and Labels (Uncommented for a complete chart) ---
+        #plt.title(title)
+        plt.xlabel("t-SNE 1")
+        plt.ylabel("t-SNE 2")
         plt.grid(True)
         plt.savefig(datapath)
         plt.close()

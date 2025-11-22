@@ -15,7 +15,7 @@ lasso_regularization: 0.01
 data_type: "float32"
 label_type: "long"
 batch_size: 256
-epochs: 1000
+epochs: 2000
 learning_rate: 0.001
 model: 1
 scale: true

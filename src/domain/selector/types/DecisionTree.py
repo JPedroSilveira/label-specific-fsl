@@ -11,7 +11,7 @@ from src.domain.data.types.Dataset import Dataset
 class DecisionTree(BaseSelectorWeight):
     def __init__(self, n_features: int, n_labels: int, config: DatasetConfig) -> None:
         super().__init__(n_features, n_labels, config)
-        self.model = DecisionTreeClassifier(class_weight="balanced")
+        self.model = DecisionTreeClassifier()
 
     def get_name() -> str:
         return "Decision Tree"

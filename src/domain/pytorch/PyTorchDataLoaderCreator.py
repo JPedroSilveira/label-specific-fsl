@@ -9,4 +9,4 @@ class PyTorchDataLoaderCreator:
     @staticmethod
     def execute(X: np.ndarray, y: np.ndarray, config: DatasetConfig) -> pydata.DataLoader:
         pyTorchData = PyTorchDataset(X, y, config)
-        return pydata.DataLoader(pyTorchData, shuffle=True, batch_size=config.batch_size)
+        return pydata.DataLoader(pyTorchData, shuffle=False, batch_size=config.batch_size)
