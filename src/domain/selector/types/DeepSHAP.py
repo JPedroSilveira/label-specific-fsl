@@ -30,15 +30,9 @@ class DeepSHAP(BaseSelectorWeight):
         return SelectorSpecificity.PER_LABEL
 
     def fit(self, train_dataset: Dataset, test_dataset: Dataset) -> None: 
-        k = self._k
-        if k > len(train_dataset.get_features()):
-            k = len(train_dataset.get_features())
-        representative_k = self._representative_k
-        if representative_k > len(train_dataset.get_features()):
-            representative_k = len(train_dataset.get_features())
         PyTorchFit.execute(self._model, train_dataset, self._config)
-        shap_samples = shap.sample(test_dataset.get_features(), k)
-        shap_representative = shap.sample(train_dataset.get_features(), representative_k)
+        shap_samples = shap.sample(test_dataset.get_features(), self._k)
+        shap_representative = shap.sample(train_dataset.get_features(), self._representative_k)
         explainer = shap.DeepExplainer(model=self._model, data=convert_nparray_to_tensor(shap_representative))
         self._shap_values = explainer.shap_values(convert_nparray_to_tensor(shap_samples))
 

@@ -1,5 +1,7 @@
 from typing import List
 
+from skimage import metrics
+
 
 class ExecutionOutputConfig:
     root: str
@@ -30,6 +32,8 @@ class DatasetConfig:
     lime_k: int
     shap_k: int
     shap_representative_k: int
+    sage_k: int
+    sage_representative_k: int
     relieff_k: int
     lasso_regularization: float
     data_type: str
@@ -42,6 +46,7 @@ class DatasetConfig:
     normalize: bool
     jaccard_k: int
     random_seed: int
+    external_predictor_k: int
 
 class FeatureConfig:
     informative_prefix: str
@@ -60,6 +65,7 @@ class Config:
     selectors: List[SelectorConfig]
     stability_metric: List[StabilityMetric]
     stability_reduced: List[int]
+    metrics: List[str]
 
     
         

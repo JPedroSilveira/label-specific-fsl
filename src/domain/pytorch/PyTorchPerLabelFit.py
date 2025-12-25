@@ -12,8 +12,8 @@ from src.domain.data.types.Dataset import Dataset
 from sklearn.utils.class_weight import compute_class_weight
 
 class PyTorchPerLabelFit:
-    @staticmethod
-    def execute(model: nn.Module, train_dataset: Dataset, config: DatasetConfig) -> None:
+    @classmethod
+    def execute(cls, model: nn.Module, train_dataset: Dataset, config: DatasetConfig) -> None:
         # Enable regularization
         enable_regularization = callable(getattr(model, "get_regularization", None))
         # Enable before forward
@@ -24,7 +24,7 @@ class PyTorchPerLabelFit:
         features = train_dataset.get_features()
         labels = train_dataset.get_labels()
         # Define loss criterion
-        criterion = PyTorchPerLabelFit._get_criterion(labels)
+        criterion = cls._get_criterion(labels)
         # Create optimizer
         optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
         # Info variables
@@ -44,7 +44,7 @@ class PyTorchPerLabelFit:
             model.train()
             # Iterate over data loaders for each class
             for _ in range(0, len(by_label_data_loaders[0])):
-                for i in PyTorchPerLabelFit._shuffed_range(0, len(by_label_data_loaders)):
+                for i in cls._shuffed_range(0, len(by_label_data_loaders)):
                     try:
                         X, y = next(iterators[i])
                         # Send expected output to model when necessary

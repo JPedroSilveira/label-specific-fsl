@@ -5,7 +5,7 @@ from typing import Dict, List, Type
 from itertools import combinations
 
 from config.type import Config
-from src.domain.data.WeightReader import WeightReader
+from src.domain.data.reader.WeightReader import WeightReader
 from src.domain.stability.StabilityMetricTypeCreator import StabilityMetricTypeCreator
 from src.domain.log.Logger import Logger
 from src.domain.selector.types.base.BaseSelector import BaseSelector

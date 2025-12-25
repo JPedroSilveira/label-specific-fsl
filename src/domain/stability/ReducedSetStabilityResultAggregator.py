@@ -1,6 +1,8 @@
 import statistics
 from typing import Any, Dict, List, Type
 
+import numpy as np
+
 from src.domain.log.Logger import Logger
 from src.domain.selector.types.base.BaseSelector import BaseSelector
 from src.domain.storage.ExecutionStorage import ExecutionStorage
@@ -29,8 +31,13 @@ class ReducedSetStabilityResultAggregator:
                 for label, scores_per_metric in scores_per_label_per_metric.items():
                     Logger.execute(f"--- Label: {label}")
                     for metric, scores in scores_per_metric.items():
-                        mean = statistics.mean(scores)
-                        stdev = statistics.stdev(scores)
+                        non_nan_scores = [s for s in scores if not np.isnan(s)]
+                        if len(non_nan_scores) > 0:
+                            mean = statistics.mean(non_nan_scores)
+                            stdev = statistics.stdev(non_nan_scores)
+                        else:
+                            mean = 0.0
+                            stdev = 0.0
                         Logger.execute(f"---- Metric: {metric}")
                         Logger.execute(f"----- Mean: {mean}")
                         Logger.execute(f"----- Standard deviation: {stdev}")

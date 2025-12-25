@@ -106,3 +106,9 @@ Define the metrics for assessing the consistency of the feature selection proces
 With all configurations and dependencies prepared, run the main script:
 
 python main.py
+
+## WTSNE Error
+`qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.`
+
+Try:
+`sudo apt-get install --reinstall libxcb-xinerama0 libxcb-xinerama0-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shm0 libxcb-sync1 libxcb-xfixes0 libxcb-xkb1 libxcb-shape0 libxkbcommon-x11-0`

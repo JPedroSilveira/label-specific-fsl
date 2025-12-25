@@ -11,6 +11,8 @@ regularization_lambda: 0.0025
 lime_k: 1000
 shap_k: 1000
 shap_representative_k: 1000
+sage_k: 100
+sage_representative_k: 100
 relieff_k: 1000
 lasso_regularization: 0.01
 data_type: "float32"
@@ -23,3 +25,4 @@ scale: true
 normalize: false
 jaccard_k: 30
 random_seed: 42
+external_predictor_k: 1000

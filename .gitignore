@@ -172,6 +172,7 @@ cython_debug/
 
 output/
 outputs/
+output-*/
 folder_structure_goal.txt
 
 dataset/Breast_GSE45827.csv

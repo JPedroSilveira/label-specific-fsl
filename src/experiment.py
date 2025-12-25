@@ -1,10 +1,12 @@
-import selectors
 import uuid
 import hydra
 import matplotlib as plt
 from typing import List
+from omegaconf import OmegaConf
 
 from config.type import Config
+from src.domain.prediction.SelectorPredictionAggregator import SelectorPredictionAggregator
+from src.domain.informative_features.InformativeFeaturesCalculator import InformativeFeaturesCalculator
 from src.domain.wtsne.WTSNECreator import WTSNECreator
 from src.domain.data.LabelConverter import LabelConverter
 from src.domain.stability.ReducedSetStabilityResultAggregator import ReducedSetStabilityResultAggregator
@@ -43,6 +45,9 @@ def execute_experiment(config: Config) -> None:
     # Start logger
     Logger.setup(config)
     Logger.execute(f'[STARTED] Execution ID: {execution_id}')
+    
+    # Print config
+    Logger.execute(f'Configuration: {OmegaConf.to_yaml(config, resolve=True)}')
     
     # Test GPU
     TestGPU.execute()
@@ -102,27 +107,31 @@ def execute_experiment(config: Config) -> None:
             selector_execution_time = selector_execution_time_counter.print_end('Selector training').get_execution_time()
             storage.add_execution_time(selector, selector_execution_time)
             # Calculate prediction score of selector if available
-            if selector.can_predict():
+            if selector.can_predict() and 'selector_prediction' in config.metrics:
                 prediction_score = SelectorPredictionMetric.execute(selector, splitted_dataset.get_test())
                 Logger.execute(f'F1 Score: {prediction_score.report.general.f1_score}')
+                storage.add_general_prediction_score(selector, prediction_score.report.general)
+                for label, label_score in enumerate(prediction_score.report.per_label):
+                    storage.add_per_label_prediction_score(selector, label, label_score)
             # Persist weights
             WeightPersistence.execute(id, selector, config.output, feature_names)
-            reduced_stability_score_per_size_per_label_per_metric = ReducedSetStabilityMetric.execute(selector, selector_class, train_dataset, splitted_dataset.get_test(), config)
-            storage.add_reduced_stability_score(selector, reduced_stability_score_per_size_per_label_per_metric)
-            
+            if 'reduced_stability' in config.metrics:
+                reduced_stability_score_per_size_per_label_per_metric = ReducedSetStabilityMetric.execute(selector, selector_class, train_dataset, splitted_dataset.get_test(), config)
+                storage.add_reduced_stability_score(selector, reduced_stability_score_per_size_per_label_per_metric)
+
     # Calculate metrics
     ExecutionTimeStats.execute(selectors_class, storage)
-    SelectorStabilityMetric.execute(selectors_class, config)
-    ReducedSetStabilityResultAggregator.execute(selectors_class, storage)
-    WTSNECreator.execute(selectors_class, splitted_dataset.get_complete(), config)
+    if 'selector_prediction' in config.metrics:
+        SelectorPredictionAggregator.execute(selectors_class, storage)
+    if 'informative_features' in config.metrics:
+        InformativeFeaturesCalculator.execute(selectors_class, splitted_dataset.get_complete(), config)
+    if 'stability' in config.metrics:
+        SelectorStabilityMetric.execute(selectors_class, config)
+    if 'reduced_stability' in config.metrics:
+        ReducedSetStabilityResultAggregator.execute(selectors_class, storage)
+    if 'wtsne' in config.metrics:
+        WTSNECreator.execute(selectors_class, splitted_dataset.get_complete(), config)
     
-    # TODO: Implement new stability metric
-    # TODO: Change @staticmethod to @classmethod
-    # TODO: Implement all datasets [XOR, SynthA, SynthB, SynthC, Liver, Colorectal, Breast]
-    # TODO: Store prediction performance
-    # TODO: Implement WTSNE + silhouette
-    # TODO: Implement Feature ranking positions  
-    # TODO: Implement PIFS and PSFI metrics with graph
     # TODO: Implement Heatmap
     # TODO: Implement Predictor training with graph (SVC)
     # TODO: Implement Feature erasure

@@ -6,11 +6,11 @@ from src.domain.data.types.Dataset import Dataset
 
 
 class DatasetNormalizer:
-    @staticmethod
-    def execute(splitted_dataset: SplittedDataset, config: DatasetConfig) -> None:
+    @classmethod
+    def execute(cls, splitted_dataset: SplittedDataset, config: DatasetConfig) -> None:
         if config.normalize:
-            DatasetNormalizer._normalize(splitted_dataset.get_train())
-            DatasetNormalizer._normalize(splitted_dataset.get_test())
+            cls._normalize(splitted_dataset.get_train())
+            cls._normalize(splitted_dataset.get_test())
             
     @staticmethod
     def _normalize(dataset: Dataset) -> None:

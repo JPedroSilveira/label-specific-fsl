@@ -14,8 +14,8 @@ from sklearn.utils.class_weight import compute_class_weight
 
 
 class PyTorchFit:
-    @staticmethod
-    def execute(model: nn.Module, train_dataset: Dataset, config: DatasetConfig) -> None:
+    @classmethod
+    def execute(cls, model: nn.Module, train_dataset: Dataset, config: DatasetConfig) -> None:
         # Enable regularization
         enable_regularization = callable(getattr(model, "get_regularization", None))
         # Enable before forward
@@ -26,7 +26,7 @@ class PyTorchFit:
         train_features = train_dataset.get_features()
         train_labels = train_dataset.get_labels()
         # Define loss criterion
-        criterion = PyTorchFit._get_criterion(train_labels)
+        criterion = cls._get_criterion(train_labels)
         # Create optimizer
         optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
         # Create train data loader

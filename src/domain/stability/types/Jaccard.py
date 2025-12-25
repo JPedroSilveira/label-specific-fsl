@@ -1,3 +1,4 @@
+from fractions import Fraction
 from pandas import DataFrame
 
 from config.type import Config
@@ -5,16 +6,17 @@ from src.domain.stability.types.base.BaseStabilityMetric import BaseStabilityMet
 
 
 class Jaccard(BaseStabilityMetric):
-    @staticmethod
-    def execute(dataframe1: DataFrame, dataframe2: DataFrame, config: Config) -> float:
-        features1 = Jaccard._process_data(dataframe1, config)
-        features2 = Jaccard._process_data(dataframe2, config)
+    @classmethod
+    def execute(cls, dataframe1: DataFrame, dataframe2: DataFrame, config: Config) -> float:
+        features1 = cls._process_data(dataframe1, config)
+        features2 = cls._process_data(dataframe2, config)
         intersection = len(features1.intersection(features2))
         union = len(features1.union(features2))
         if union == 0:
-            return 1.0 
+            score = 1.0 
         else:
-            return intersection / union
+            score = intersection / union
+        return score
     
     @staticmethod
     def get_name() -> str:

@@ -6,11 +6,11 @@ from src.domain.data.types.Dataset import Dataset
 
 
 class DatasetScaler:
-    @staticmethod
-    def execute(splitted_dataset: SplittedDataset, config: DatasetConfig) -> None:
+    @classmethod
+    def execute(cls, splitted_dataset: SplittedDataset, config: DatasetConfig) -> None:
         if config.normalize:
-            DatasetScaler._scale(splitted_dataset.get_train())
-            DatasetScaler._scale(splitted_dataset.get_test())
+            cls._scale(splitted_dataset.get_train())
+            cls._scale(splitted_dataset.get_test())
             
     @staticmethod
     def _scale(dataset: Dataset) -> None:

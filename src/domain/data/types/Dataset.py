@@ -13,7 +13,7 @@ class Dataset():
         self._informative_features_per_label = informative_features_per_label
 
     def get_features(self) -> np.ndarray:
-        return self._features
+        return np.copy(self._features)
     
     def set_features(self, features: np.ndarray) -> None:
         self._features = features
@@ -24,7 +24,7 @@ class Dataset():
         return one_hot_encoder.transform(labels)
     
     def get_labels(self) -> np.ndarray:
-        return self._labels
+        return np.copy(self._labels)
     
     def get_n_samples(self) -> int:
         return len(self._labels)
@@ -44,5 +44,14 @@ class Dataset():
     def get_informative_features(self) -> list[int]:
         return self._informative_features
     
+    def get_informative_features_names(self) -> list[str]:
+        return [self._feature_names[i] for i in self._informative_features]
+    
     def get_informative_features_per_label(self) -> dict[int, list[int]]:
         return self._informative_features_per_label
+    
+    def get_informative_features_names_per_label(self) -> dict[int, list[str]]:
+        informative_features_names_per_label = {}
+        for label, features in self._informative_features_per_label.items():
+            informative_features_names_per_label[label] = [self._feature_names[i] for i in features]
+        return informative_features_names_per_label

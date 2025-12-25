@@ -1,7 +1,6 @@
 import numpy as np
 from pandas import DataFrame
 from sklearn import metrics
-from sklearn.discriminant_analysis import StandardScaler
 from sklearn.manifold import TSNE
 from typing import Dict, List, Type
 import matplotlib.pyplot as plt
@@ -9,7 +8,7 @@ import matplotlib.pyplot as plt
 from config.type import Config
 from src.domain.data.Normalizer import Normalizer
 from src.domain.data.types.Dataset import Dataset 
-from src.domain.data.WeightReader import WeightReader
+from src.domain.data.reader.WeightReader import WeightReader
 from src.domain.selector.types.base.BaseSelector import BaseSelector
 from src.domain.log.Logger import Logger
 
@@ -48,13 +47,20 @@ class WTSNECreator:
             title = f"Weighted TSNE"
             weights = weights['value'].to_numpy()
             W = Normalizer.execute(weights)
-            X = X * W
+            X = X * np.sqrt(W)
+        perplexity = max(30, len(X)/100)
+        learning_rate = max(200, dataset.get_n_features()/12) / 4
+        Logger.execute(f"-- Perplexity: {perplexity}")   
+        Logger.execute(f"-- Learning rate: {learning_rate}")   
         tsne = TSNE(
             n_components=2,
-            perplexity=30,
-            max_iter=1000,
+            perplexity=perplexity,
+            max_iter=500,
             verbose=1,
-            random_state=config.dataset.random_seed
+            random_state=config.dataset.random_seed,
+            init='pca',
+            metric='euclidean',
+            learning_rate=learning_rate
         )
         embedding = tsne.fit_transform(X)
         embedding_silhouette = metrics.silhouette_score(embedding, y, metric='euclidean')

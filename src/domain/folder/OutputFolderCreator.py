@@ -3,8 +3,8 @@ import os
 from config.type import OutputConfig
 
 class OutputFolderCreator:
-    @staticmethod
-    def execute(output_config: OutputConfig, execution_id: str) -> None:      
+    @classmethod
+    def execute(cls, output_config: OutputConfig, execution_id: str) -> None:      
         output_config.temporary = path.join(output_config.root, output_config.temporary)
         output_config.execution_output.root = path.join(output_config.root, execution_id)
         output_config.execution_output.log_file = path.join(output_config.execution_output.root, output_config.execution_output.log_file)
@@ -16,17 +16,17 @@ class OutputFolderCreator:
         output_config.execution_output.stability = path.join(output_config.execution_output.root, output_config.execution_output.stability)
         output_config.execution_output.weighted_tsne = path.join(output_config.execution_output.root, output_config.execution_output.weighted_tsne)
         output_config.execution_output.raw_selection = path.join(output_config.execution_output.root, output_config.execution_output.raw_selection)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.root)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.temporary)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.root)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.execution_time)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.feature_erasure)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.informative_features)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.predictive_performance)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.selection_performance)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.stability)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.weighted_tsne)
-        OutputFolderCreator._create_folder_if_not_exists(output_config.execution_output.raw_selection)
+        cls._create_folder_if_not_exists(output_config.root)
+        cls._create_folder_if_not_exists(output_config.temporary)
+        cls._create_folder_if_not_exists(output_config.execution_output.root)
+        cls._create_folder_if_not_exists(output_config.execution_output.execution_time)
+        cls._create_folder_if_not_exists(output_config.execution_output.feature_erasure)
+        cls._create_folder_if_not_exists(output_config.execution_output.informative_features)
+        cls._create_folder_if_not_exists(output_config.execution_output.predictive_performance)
+        cls._create_folder_if_not_exists(output_config.execution_output.selection_performance)
+        cls._create_folder_if_not_exists(output_config.execution_output.stability)
+        cls._create_folder_if_not_exists(output_config.execution_output.weighted_tsne)
+        cls._create_folder_if_not_exists(output_config.execution_output.raw_selection)
             
     @staticmethod
     def _create_folder_if_not_exists(folder_path) -> None:

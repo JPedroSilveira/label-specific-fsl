@@ -11,10 +11,10 @@ from sklearn.utils.class_weight import compute_class_weight
 
 
 class PyTorchSimpleFit:
-    @staticmethod
-    def execute(model: nn.Module, X: np.ndarray, y: np.ndarray, config: DatasetConfig) -> None:
+    @classmethod
+    def execute(cls, model: nn.Module, X: np.ndarray, y: np.ndarray, config: DatasetConfig) -> None:
         # Define loss criterion
-        criterion = PyTorchSimpleFit._get_criterion(y)
+        criterion = cls._get_criterion(y)
         # Create optimizer
         optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
         # Setup train mode

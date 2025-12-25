@@ -6,7 +6,7 @@ defaults:
     - stability_reduced: top2
 feature:
     informative_prefix: "informative_"
-    informative_per_label_prefix: "informative_per_label_"
+    informative_per_label_prefix: "informative_for_labels_"
 output:
     root: "output"
     temporary: "temporary"
@@ -21,3 +21,7 @@ output:
         informative_features: "informative_features"
         raw_selection: "raw_selection"
         log_file: "log.txt"
+    metrics:
+        - pifs
+        - stability
+        - reduced_stability

@@ -69,8 +69,8 @@ class MultipleFSLModel(nn.Module):
         return output
 
     def get_regularization(self) -> Tensor:
-        return self._regularization * torch.abs(torch.sum(self.get_weight()))
-        #return self._regularization * torch.sum(torch.abs(self.get_weight()))
+        return self._regularization * torch.sum(torch.abs(self.get_weight()))
+        #return self._regularization * torch.abs(torch.sum(self.get_weight()))
         #return self._regularization * torch.sum(self.get_activated_weight())
         #return torch.abs(self._n_features - (torch.sum(self.get_activated_weight()) / self._n_labels))
 
