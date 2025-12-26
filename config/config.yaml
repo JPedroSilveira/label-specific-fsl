@@ -3,7 +3,8 @@ defaults:
     - dataset: xor
     - selectors: default
     - stability_metric: default
-    - stability_reduced: top2
+    - stability_reduced: top1
+    - metrics: all
 feature:
     informative_prefix: "informative_"
     informative_per_label_prefix: "informative_for_labels_"
@@ -21,7 +22,3 @@ output:
         informative_features: "informative_features"
         raw_selection: "raw_selection"
         log_file: "log.txt"
-    metrics:
-        - pifs
-        - stability
-        - reduced_stability

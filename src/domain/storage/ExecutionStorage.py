@@ -1,4 +1,4 @@
-from typing import Dict, List, Type
+from typing import Dict, List, Tuple, Type
 
 from src.domain.selector.types.base.BaseSelector import BaseSelector
 from src.domain.prediction.types.ClassificationScoreGeneralReport import ClassificationScoreGeneralReport
@@ -10,6 +10,7 @@ class ExecutionStorage:
         self._reduced_stability_score_per_selector_per_size_per_label_per_metric: Dict[str, List[Dict[str, Dict[str, Dict[str, float]]]]] = {}
         self._general_prediction_score_per_selector: Dict[str, List[ClassificationScoreGeneralReport]] = {}
         self._per_label_prediction_score_per_selector: Dict[str, Dict[int, List[ClassificationScoreLabelReport]]] = {}
+        self._erasure_scores_per_selector_and_label_and_number_of_features: Dict[str, Dict[str, Dict[int, Tuple[List[ClassificationScoreGeneralReport], Dict[int, List[ClassificationScoreLabelReport]]]]]] = {}
         
     def add_execution_time(self, selector: BaseSelector, value: float) -> None:
         if selector.get_selector_name() in self._execution_time_per_selector:
@@ -52,5 +53,23 @@ class ExecutionStorage:
         if selector_class.get_name() not in self._per_label_prediction_score_per_selector:
             return None
         return self._per_label_prediction_score_per_selector[selector_class.get_name()]
-            
     
+    def add_erasure_scores_per_selector_and_label_and_number_of_features(self, selector: BaseSelector, label: str, number_of_features: int, general_report: ClassificationScoreGeneralReport, per_label_reports: List[ClassificationScoreLabelReport]) -> None:
+        if selector.get_selector_name() not in self._erasure_scores_per_selector_and_label_and_number_of_features:
+            self._erasure_scores_per_selector_and_label_and_number_of_features[selector.get_selector_name()] = {}
+        if label not in self._erasure_scores_per_selector_and_label_and_number_of_features[selector.get_selector_name()]:
+            self._erasure_scores_per_selector_and_label_and_number_of_features[selector.get_selector_name()][label] = {}
+        if number_of_features in self._erasure_scores_per_selector_and_label_and_number_of_features[selector.get_selector_name()][label]:
+            existing_general_reports, existing_per_label_reports = self._erasure_scores_per_selector_and_label_and_number_of_features[selector.get_selector_name()][label][number_of_features]
+            existing_general_reports.append(general_report)
+            for report in per_label_reports:
+                if report.label not in existing_per_label_reports:
+                    existing_per_label_reports[report.label] = []
+                existing_per_label_reports[report.label].append(report)
+        else:
+            self._erasure_scores_per_selector_and_label_and_number_of_features[selector.get_selector_name()][label][number_of_features] = ([general_report], {report.label: [report] for report in per_label_reports})
+            
+    def get_erasure_scores_per_selector_and_label_and_number_of_features(self, selector_class: Type[BaseSelector]) -> Dict[str, Dict[int, Tuple[List[ClassificationScoreGeneralReport], Dict[int, List[ClassificationScoreLabelReport]]]]]:
+        if selector_class.get_name() not in self._erasure_scores_per_selector_and_label_and_number_of_features:
+            return None
+        return self._erasure_scores_per_selector_and_label_and_number_of_features[selector_class.get_name()]

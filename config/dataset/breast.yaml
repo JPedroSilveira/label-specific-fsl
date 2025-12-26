@@ -24,4 +24,7 @@ scale: false
 normalize: true
 jaccard_k: 100
 random_seed: 42
-external_predictor_k: 1000
+external_predictor_k: 100
+external_predictor_step: 1
+erasure_k: 100
+erasure_step: 1

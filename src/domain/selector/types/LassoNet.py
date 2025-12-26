@@ -12,7 +12,6 @@ class LassoNet(BaseSelectorWeight):
         self._model = LassoNetClassifierCV(
             hidden_dims=(100,200,100,100),
             dropout=0.1,
-            batch_size=config.batch_size,
             device=DeviceGetter.execute(),
             random_state=config.random_seed,
             torch_seed=config.random_seed,

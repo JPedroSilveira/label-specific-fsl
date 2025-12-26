@@ -50,8 +50,8 @@ class WTSNECreator:
             X = X * np.sqrt(W)
         perplexity = max(30, len(X)/100)
         learning_rate = max(200, dataset.get_n_features()/12) / 4
-        Logger.execute(f"-- Perplexity: {perplexity}")   
-        Logger.execute(f"-- Learning rate: {learning_rate}")   
+        #Logger.execute(f"-- Perplexity: {perplexity}")   
+        #Logger.execute(f"-- Learning rate: {learning_rate}")   
         tsne = TSNE(
             n_components=2,
             perplexity=perplexity,

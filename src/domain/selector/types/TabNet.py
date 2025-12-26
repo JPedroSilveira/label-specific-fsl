@@ -24,7 +24,6 @@ class TabNet(BaseSelectorWeight):
             seed=config.random_seed,
             momentum=0.02, # From 0.01 to 0.4
             lambda_sparse=1e-5,
-            device_name=DeviceGetter.execute(),
             #mask_type="sparsemax" # Default sparsemax 
         )
 
@@ -38,11 +37,12 @@ class TabNet(BaseSelectorWeight):
         return SelectorSpecificity.PER_LABEL
     
     def fit(self, train_dataset: Dataset, test_dataset: Dataset) -> None: 
-        self._model.fit(train_dataset.get_features(), train_dataset.get_labels(), max_epochs=5, 
+        self._model.fit(train_dataset.get_features(), train_dataset.get_labels(), max_epochs=1000, 
                         loss_fn=PyTorchFit._get_criterion(train_dataset.get_labels()), 
                         eval_set=[(test_dataset.get_features(), test_dataset.get_labels())], 
                         eval_metric=['logloss'],
-                        batch_size=16, patience=200)
+                        batch_size=16, 
+                        patience=50)
         feature_names = train_dataset.get_feature_names()
         explain_matrix, masks = self._model.explain(train_dataset.get_features())
         importance_df = pd.DataFrame(explain_matrix, columns=feature_names)

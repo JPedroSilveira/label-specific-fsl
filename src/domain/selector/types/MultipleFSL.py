@@ -38,7 +38,8 @@ class MultipleFSL(BaseSelectorWeight):
         return PyTorchPredict.execute(self._model, dataset.get_features(), use_softmax)
     
     def get_general_weights(self) -> np.ndarray:
-        return np.sum(self.get_per_label_weights(), axis=0)
+        #return np.sum(self.get_per_label_weights(), axis=0)
+        return np.max(self.get_per_label_weights(), axis=0)
     
     def get_per_label_weights(self) -> np.ndarray:
         w = self._model.get_activated_weight()

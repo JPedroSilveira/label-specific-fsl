@@ -1,13 +1,11 @@
 import statistics
 import pandas as pd
-from typing import Dict, List, Type
+from typing import List, Type
 
 from config.type import Config
 from src.domain.data.reader.RankingReader import RankingReader
 from src.domain.log.Logger import Logger
-from src.domain.storage import ExecutionStorage
 from src.domain.data.types.Dataset import Dataset 
-from src.domain.selector.types.enum.SelectorSpecificity import SelectorSpecificity
 from src.domain.selector.types.base.BaseSelector import BaseSelector
 
 

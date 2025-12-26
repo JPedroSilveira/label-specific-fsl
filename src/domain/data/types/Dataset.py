@@ -11,6 +11,17 @@ class Dataset():
         self._feature_names = feature_names
         self._informative_features = informative_features
         self._informative_features_per_label = informative_features_per_label
+        
+    @staticmethod
+    def from_dataset_with_new_features(dataset: Self, features: np.ndarray) -> Self:
+        return Dataset(
+            features=features,
+            labels=dataset.get_labels(),
+            label_types=dataset.get_label_types(),
+            feature_names=dataset.get_feature_names(),
+            informative_features=dataset.get_informative_features(),
+            informative_features_per_label=dataset.get_informative_features_per_label(),
+        )
 
     def get_features(self) -> np.ndarray:
         return np.copy(self._features)

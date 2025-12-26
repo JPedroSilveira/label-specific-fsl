@@ -1,6 +1,7 @@
 from pandas import DataFrame
 
 from config.type import DatasetConfig
+from src.domain.log.Logger import Logger
 
 
 class LabelConverter:
@@ -10,11 +11,11 @@ class LabelConverter:
             encoded_codes = categorical_series.cat.codes
             dataframe[config.label_column] = encoded_codes
             mapper = dict(enumerate(categorical_series.cat.categories))
-            print("--- Conversion (Code -> Label) ---")
-            print(mapper)
+            Logger.execute("--- Conversion (Code -> Label) ---")
+            Logger.execute(mapper)
             mapper_reversed = {v: k for k, v in mapper.items()}
-            print("--- Conversion (Label -> Code) ---")
-            print(mapper_reversed)
+            Logger.execute("--- Conversion (Label -> Code) ---")
+            Logger.execute(mapper_reversed)
             config.label_type = "long"
         
         

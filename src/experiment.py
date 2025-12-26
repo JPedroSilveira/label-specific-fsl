@@ -5,6 +5,9 @@ from typing import List
 from omegaconf import OmegaConf
 
 from config.type import Config
+from src.domain.erasure.ErasureAggregator import ErasureAggregator
+from src.domain.erasure.ErasureCalculator import ErasureCalculator
+from src.domain.external_predictor.ExternalPredictorEvaluation import ExternalPredictorEvaluation
 from src.domain.prediction.SelectorPredictionAggregator import SelectorPredictionAggregator
 from src.domain.informative_features.InformativeFeaturesCalculator import InformativeFeaturesCalculator
 from src.domain.wtsne.WTSNECreator import WTSNECreator
@@ -93,6 +96,7 @@ def execute_experiment(config: Config) -> None:
     # Train for each fold
     for id, train_dataset in enumerate(k_train_datasets):
         Logger.execute(f'Training fold {id+1} of {len(k_train_datasets)}')
+        fold_execution_time_counter = ExecutionTimeCounter().start()
         # Train each selector
         for selector_class in selectors_class:
             Logger.execute(f'================================================')
@@ -106,18 +110,18 @@ def execute_experiment(config: Config) -> None:
             # Calculate execution time
             selector_execution_time = selector_execution_time_counter.print_end('Selector training').get_execution_time()
             storage.add_execution_time(selector, selector_execution_time)
-            # Calculate prediction score of selector if available
-            if selector.can_predict() and 'selector_prediction' in config.metrics:
-                prediction_score = SelectorPredictionMetric.execute(selector, splitted_dataset.get_test())
-                Logger.execute(f'F1 Score: {prediction_score.report.general.f1_score}')
-                storage.add_general_prediction_score(selector, prediction_score.report.general)
-                for label, label_score in enumerate(prediction_score.report.per_label):
-                    storage.add_per_label_prediction_score(selector, label, label_score)
+            # Calculate prediction score
+            if 'selector_prediction' in config.metrics:
+                prediction_score = SelectorPredictionMetric.execute(selector, splitted_dataset.get_test(), storage)
+            # Calculate feature erasure
+            if 'erasure' in config.metrics:
+                ErasureCalculator.execute(selector, splitted_dataset.get_test(), storage, config)
             # Persist weights
             WeightPersistence.execute(id, selector, config.output, feature_names)
             if 'reduced_stability' in config.metrics:
                 reduced_stability_score_per_size_per_label_per_metric = ReducedSetStabilityMetric.execute(selector, selector_class, train_dataset, splitted_dataset.get_test(), config)
                 storage.add_reduced_stability_score(selector, reduced_stability_score_per_size_per_label_per_metric)
+        fold_execution_time_counter.print_end('Fold').get_execution_time()
 
     # Calculate metrics
     ExecutionTimeStats.execute(selectors_class, storage)
@@ -131,10 +135,12 @@ def execute_experiment(config: Config) -> None:
         ReducedSetStabilityResultAggregator.execute(selectors_class, storage)
     if 'wtsne' in config.metrics:
         WTSNECreator.execute(selectors_class, splitted_dataset.get_complete(), config)
+    if 'external_predictor' in config.metrics:
+        ExternalPredictorEvaluation.execute(selectors_class, splitted_dataset, config)
+    if 'erasure' in config.metrics:
+        ErasureAggregator.execute(selectors_class, storage, config)
     
     # TODO: Implement Heatmap
-    # TODO: Implement Predictor training with graph (SVC)
-    # TODO: Implement Feature erasure
     
     Logger.execute(f'[COMPLETED] Execution ID: {execution_id}')
     Logger.execute(f'- Time: {execution_time_counter.get_execution_time()}s')

@@ -47,6 +47,9 @@ class DatasetConfig:
     jaccard_k: int
     random_seed: int
     external_predictor_k: int
+    external_predictor_step: int
+    erasure_k: int
+    erasure_step: int
 
 class FeatureConfig:
     informative_prefix: str

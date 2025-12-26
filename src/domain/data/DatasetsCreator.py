@@ -14,7 +14,6 @@ class DatasetsCreator:
         informative_features = []
         informative_features_per_label = {}
         for index, column in enumerate(dataframe.columns):
-            print(column)
             if column in config.dataset.ignored_columns:
                 continue
             if column != config.dataset.label_column:
